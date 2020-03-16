@@ -6,13 +6,19 @@ Cellular subtype and patient subtype prioritization
 
 ### R packages
 flowCore
+
 Seurat
 
 ### Python packages
 Tensorflow
+
 functools
+
 Scipy
+
 numpy
+
 pandas
+
 scipy
 
