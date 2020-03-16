@@ -1,6 +1,5 @@
 import tensorflow as tf				#NEED
 from functools import partial		#NEED
-import utils						#NEED
 slim = tf.contrib.slim
 import numpy as np
 import pandas as pd
@@ -8,8 +7,6 @@ import math
 from scipy import stats
 from sklearn import preprocessing
 import scipy.io as sio
-import optunity as opt
-import gseapy as gp
 from os import listdir
 import os
 import sys
