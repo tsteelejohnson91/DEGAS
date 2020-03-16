@@ -1,6 +1,5 @@
 import tensorflow as tf				#NEED
 from functools import partial		#NEED
-import utils						#NEED
 slim = tf.contrib.slim
 import numpy as np
 import pandas as pd
@@ -8,13 +7,29 @@ import math
 from scipy import stats
 from sklearn import preprocessing
 import scipy.io as sio
-import optunity as opt
-import gseapy as gp
 from os import listdir
 import os
 import sys
 from os.path import isfile, join
 
+# =============================================================================
+# Gaussian kernel matrix
+# =============================================================================
+
+
+def compute_pairwise_distances(x, y):
+    if not len(x.get_shape()) == len(y.get_shape()) == 2:
+        raise ValueError('Both inputs should be matrices.')
+    if x.get_shape().as_list()[1] != y.get_shape().as_list()[1]:
+        raise ValueError('The number of features should be the same.')
+    norm = lambda x: tf.reduce_sum(tf.square(x), 1)
+    return tf.transpose(norm(tf.expand_dims(x, 2) - tf.transpose(y)))
+
+def gaussian_kernel_matrix(x, y, sigmas):
+    beta = 1. / (2. * (tf.expand_dims(sigmas, 1)))
+    dist = compute_pairwise_distances(x, y)
+    s = tf.matmul(beta, tf.reshape(dist, (1, -1)))
+    return tf.reshape(tf.reduce_sum(tf.exp(-s), 0), tf.shape(dist))
 #***********************************************************************
 # Add weights to hidden layer
 def get_weight(shape, lambda1): 
@@ -64,7 +79,7 @@ def CORAL_loss(source,target):
 
 #***********************************************************************
 # MMD loss for the hidden layer output from jindongwang github
-def maximum_mean_discrepancy(x, y, kernel=utils.gaussian_kernel_matrix):
+def maximum_mean_discrepancy(x, y, kernel=gaussian_kernel_matrix):
     """Computes the Maximum Mean Discrepancy (MMD) of two samples: x and y.
     Maximum Mean Discrepancy (MMD) is a distance-measure between the samples of
     the distributions of x and y. Here we use the kernel two sample estimate
@@ -107,7 +122,7 @@ def mmd_loss(source_samples, target_samples, scope=None):
       1e3, 1e4, 1e5, 1e6
       ]
     gaussian_kernel = partial(
-      utils.gaussian_kernel_matrix, sigmas=tf.constant(sigmas))
+      gaussian_kernel_matrix, sigmas=tf.constant(sigmas))
     loss_value = maximum_mean_discrepancy(
       source_samples, target_samples, kernel=gaussian_kernel)
     loss_value = tf.maximum(1e-4, loss_value)

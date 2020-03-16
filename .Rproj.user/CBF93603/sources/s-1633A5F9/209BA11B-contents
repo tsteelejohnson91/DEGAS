@@ -4,7 +4,6 @@
 library(flowCore)
 library(car)
 library(Seurat)
-library(MetaNeighbor)
 
 #***************************************************************
 # General utility functions
@@ -55,7 +54,7 @@ TFsetup <- function(){
 
 # ccModel class
 setClass("ccModel",slots=list(Bias="list",Theta="list",Activation="list",
-                              Depth="numeric",model_type="character"))
+                              Depth="numeric",Model_type="character",Architecture="character"))
 
 normFunc <- function(x){return((x-mean(x, na.rm = T))/(sd(x, na.rm = T)+1e-3))}
 
@@ -109,7 +108,7 @@ writeInputFiles <- function(scExp,scLab,patExp,patLab,tmpDir){
   if(!is.null(patLab)){write.table(patLab,file=paste0(tmpDir, '/patLab.csv'), row.names=FALSE, sep=',')}
 }
 
-readOutputFiles <- function(tmpDir,model_type){
+readOutputFiles <- function(tmpDir,Model_type,architecture){
   activations = read.table(file=paste0(tmpDir, 'Activations.csv'), row.names=NULL, header=FALSE, sep=',',stringsAsFactors=FALSE)
   activations = activations[[1]]
   depth = length(activations)
@@ -129,7 +128,7 @@ readOutputFiles <- function(tmpDir,model_type){
     eval(parse(text=paste0("Thetas[[",as.character(cnt),"]]=","Theta",as.character(cnt))))
     eval(parse(text=paste0("Activations[[",as.character(cnt),"]]=activation")))
   }
-  return(new('ccModel',Bias=Biases,Theta=Thetas,Activation=Activations,Depth=depth,model_type=model_type))
+  return(new('ccModel',Bias=Biases,Theta=Thetas,Activation=Activations,Depth=depth,Model_type=Model_type,Architecture=architecture))
 }
 
 makeExec <- function(tmpDir,FFdepth,model_type){
@@ -304,15 +303,15 @@ runCCMTL <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FF
   writeInputFiles(scExp,scLab,patExp,patLab,tmpDir)
   message(checkForPy())
   system(paste0("python ",tmpDir,model_type,"MTL.py ", tmpDir))
-  ccModel1 = readOutputFiles(tmpDir,model_type)
+  ccModel1 = readOutputFiles(tmpDir,model_type,architecture)
   #system(paste0('rm -rf ',tmpDir))
   return(ccModel1)
 }
 
-predClass <- function(ccModel1,Exp,scORpat,architecture){
-  if(architecture=="DenseNet"){
+predClass <- function(ccModel1,Exp,scORpat){
+  if(ccModel1@Architecture=="DenseNet"){
     return(predClass2(ccModel1,Exp,scORpat))
-  }else if (architecture=="Standard"){
+  }else if (ccModel1@Architecture=="Standard"){
     return(predClass1(ccModel1,Exp,scORpat))
   }else{
     stop("Incorrect architecture argument")
@@ -323,7 +322,7 @@ predClass <- function(ccModel1,Exp,scORpat,architecture){
 predClass1 <- function(ccModel1,Exp,scORpat){
   Z = Exp
   rm(Exp)
-  if (ccModel1@model_type=='BlankClass' || ccModel1@model_type=='ClassBlank'){
+  if (ccModel1@Model_type=='BlankClass' || ccModel1@Model_type=='ClassBlank'){
     #message('A')
     for (i in 1:(ccModel1@Depth)){
       calcZ = paste0(ccModel1@Activation[[i]],"(sweep((as.matrix(Z) %*% ccModel1@Theta[[",as.character(i),"]]),2,ccModel1@Bias[[",as.character(i),"]],'+'))")
@@ -352,7 +351,7 @@ predClass1 <- function(ccModel1,Exp,scORpat){
 predClass2 <- function(ccModel1,Exp,scORpat){
   Z = Exp
   rm(Exp)
-  if (ccModel1@model_type=='BlankClass' || ccModel1@model_type=='ClassBlank'){
+  if (ccModel1@Model_type=='BlankClass' || ccModel1@Model_type=='ClassBlank'){
     for (i in 1:(ccModel1@Depth)){
       calcZ = paste0(ccModel1@Activation[[i]],"(sweep((as.matrix(Z) %*% ccModel1@Theta[[",as.character(i),"]]),2,ccModel1@Bias[[",as.character(i),"]],'+'))")
       if(i<ccModel1@Depth-1){
@@ -552,16 +551,14 @@ loadGMT <- function(fname){
   return(out)
 }
 
-# runLAmbDA
-
-
-# runBERMUDA
-
-
-# runCoxClassMTL
-
-
-# runTLmodel
+# Get a feature vector from a dataframe
+getFeat = function(vec,df,colm,colo){
+  tmp = vec;
+  for (i in 1:length(vec)){
+    tmp[i] = df[which(df[,colm]==vec[i])[1],colo]
+  }
+  return(tmp)
+}
 
 #!!!END OF PACKAGE PROTOTYPE CODE!!!!!!!!!!
 #!!!!!!END OF PACKAGE PROTOTYPE CODE!!!!!!!

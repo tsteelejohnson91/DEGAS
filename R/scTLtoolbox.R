@@ -4,7 +4,6 @@
 library(flowCore)
 library(car)
 library(Seurat)
-library(MetaNeighbor)
 
 #***************************************************************
 # General utility functions
