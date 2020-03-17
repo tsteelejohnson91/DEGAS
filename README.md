@@ -16,23 +16,17 @@ library(devtools)
 install_github("tsteelejohnson91/DEGAS")
 ```
 
-## Prerequisite
+## Prerequisites
 
 ### R packages
-flowCore
-
-Seurat
+* flowCore
+* Seurat
+* car
 
 ### Python packages
-Tensorflow
-
-functools
-
-Scipy
-
-numpy
-
-pandas
-
-scipy
-
+* Tensorflow
+* functools
+* Scipy
+* numpy
+* pandas
+* scipy
