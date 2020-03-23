@@ -1,6 +1,6 @@
 #***************************************************************
 # Single Cell Transfer Learning Toolbox
-#
+# Travis S Johnson and Zhi Huang
 
 #***************************************************************
 # Initializing the package
@@ -395,8 +395,9 @@ predPatClassFromSCClass <- function(ccModel1,Exp){
 }
 
 #***************************************************************
-# Core Functions
+# Other functions
 
+# Generates sets for k fold cross validation
 splitKfoldCV <- function(N,k){
   if(k<3){
     stop("Please use 3 or more folds")
@@ -422,4 +423,27 @@ splitKfoldCV <- function(N,k){
     cntr = cntr + sz[i]
   }
   return(grpIdx)
+}
+
+# Get a feature vector from a dataframe
+getFeat = function(vec,df,colm,colo){
+  tmp = vec;
+  for (i in 1:length(vec)){
+    tmp[i] = df[which(df[,colm]==vec[i])[1],colo]
+  }
+  return(tmp)
+}
+
+# returns duplicate row names to remove
+remDupIdx <- function(X,dup_rnames,rnames){
+  rem = c()
+  for (dup_rname in dup_rnames){
+    tmp = which(rnames==dup_rname)
+    Xtmp = X[tmp,]
+    Xmean = rowMeans(as.matrix(Xtmp[,2:dim(Xtmp)[2]]))
+    Xmean[is.na(Xmean)] = 0
+    Xmean = abs(Xmean)
+    rem = c(rem,tmp[which(Xmean!=max(Xmean,na.rm=TRUE))])
+  }
+  return(rem)
 }
