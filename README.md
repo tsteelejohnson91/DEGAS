@@ -5,12 +5,16 @@
 ![DEGAS](figures/DEGAS.png "DEGAS")
 
 ## Installation
+* Step 1 Install python3, pip3, and Tensorflow
+```bash
+pip3 install tensorflow==1.4
+```
 
-* Step 1 Install devtools
+* Step 2 Install devtools
 ```R
 install.packages("devtools")
 ```
-* Step 2 Install DEGAS
+* Step 3 Install DEGAS
 ```R
 library(devtools)
 install_github("tsteelejohnson91/DEGAS")
@@ -18,15 +22,8 @@ install_github("tsteelejohnson91/DEGAS")
 
 ## Prerequisites
 
-### R packages
-* flowCore
-* Seurat
-* car
-
 ### Python packages
 * Tensorflow
 * functools
-* Scipy
 * numpy
-* pandas
-* scipy
+* math
