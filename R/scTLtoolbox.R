@@ -6,8 +6,16 @@
 # Initializing the package
 
 initDEGAS <- function(){
-  pyloc <<- "python"
-  toolsPath <<- paste0(.libPaths()[1],"/DEGAS/tools/")
+  DEGAS.pyloc_ <<- "python"
+  DEGAS.toolsPath <<- paste0(.libPaths()[1],"/DEGAS/tools/")
+  DEGAS.train_steps <<- 2000
+  DEGAS.scbatch_sz <<- 200
+  DEGAS.patbatch_sz <<- 50
+  DEGAS.hidden_feats <<- 50
+  DEGAS.do_prc <<- 0.5
+  DEGAS.lambda1 <<- 3.0
+  DEGAS.lambda2 <<- 3.0
+  DEGAS.lambda3 <<- 3.0
 }
 
 #***************************************************************
@@ -23,7 +31,7 @@ checkOS <- function(){
 }
 
 checkForPy <- function(){
-  return(system(paste0(pyloc," -V")))
+  return(system(paste0(DEGAS.pyloc," -V")))
 }
 
 checkForTF <- function(){
@@ -31,8 +39,40 @@ checkForTF <- function(){
 }
 
 setPython <- function(path2python){
-  pyloc <<- path2python
+  DEGAS.pyloc <<- path2python
   #Sys.setenv(PATH = paste(c(path2python,Sys.getenv("PATH")),collapse = .Platform$path.sep))
+}
+
+set_training_steps <- function(inp){
+  DEGAS.train_steps <<- inp
+}
+
+set_single_cell_batch_size <- function(inp){
+  DEGAS.scbatch_sz <<- inp
+}
+
+set_patient_batch_size <- function(inp){
+  DEGAS.patbatch_sz <<- inp
+}
+
+set_hidden_feature_number <- function(inp){
+  DEGAS.hidden_feats <<- inp
+}
+
+set_dropout_keep_fraction <- function(inp){
+  DEGAS.do_prc <<- inp
+}
+
+set_l2_regularization_term <- function(inp){
+  DEGAS.lambda1 <<- inp
+}
+
+set_patient_loss_term <- function(inp){
+  DEGAS.lambda2 <<- inp
+}
+
+set_MMD_loss_term <- function(inp){
+  DEGAS.lambda3 <<- inp
 }
 
 TFsetup <- function(){
@@ -142,8 +182,8 @@ makeExec <- function(tmpDir,FFdepth,model_type){
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
-  system(paste0('cp ',toolsPath,model_type,'MTL_p1.py ',tmpDir))
-  system(paste0('cp ',toolsPath,model_type,'MTL_p3.py ',tmpDir))
+  system(paste0('cp ',DEGAS.toolsPath,model_type,'MTL_p1.py ',tmpDir))
+  system(paste0('cp ',DEGAS.toolsPath,model_type,'MTL_p3.py ',tmpDir))
   outlines = c()
   if (FFdepth == 1){
     outlines[length(outlines)+1] = "layerF=add_layer(xs,Fsc,hidden_feats,activation_function=tf.sigmoid,dropout_function=True,lambda1=lambda1, keep_prob1=kprob)"
@@ -211,8 +251,8 @@ makeExec2 <- function(tmpDir,FFdepth,model_type){
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
-  system(paste0('cp ',toolsPath,model_type,'MTL_p1.py ',tmpDir))
-  system(paste0('cp ',toolsPath,model_type,'MTL_p3.py ',tmpDir))
+  system(paste0('cp ',DEGAS.toolsPath,model_type,'MTL_p1.py ',tmpDir))
+  system(paste0('cp ',DEGAS.toolsPath,model_type,'MTL_p3.py ',tmpDir))
   outlines = c()
   if (FFdepth == 1){
     outlines[length(outlines)+1] = "layerF=add_layer(xs,Fsc,hidden_feats,activation_function=tf.sigmoid,dropout_function=True,lambda1=lambda1, keep_prob1=kprob)"
@@ -308,11 +348,9 @@ runCCMTL <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FF
     stop('Incorrect architecture argument')
   }
   writeInputFiles(scExp,scLab,patExp,patLab,tmpDir)
-  #message(checkForPy())                                                                        #changed 20200320
-  system(paste0(pyloc," ",tmpDir,model_type,"MTL.py ", tmpDir)) #Update this for reticulate    #changed 20200320
-  #py_run_file(paste0(tmpDir,model_type,"MTL.py ", tmpDir))                                      #changed 20200320
+  message(checkForPy())
+  system(paste0(DEGAS.pyloc," ",tmpDir,model_type,"MTL.py ", tmpDir, " ",DEGAS.train_steps," ",DEGAS.scbatch_sz," ",DEGAS.patbatch_sz," ",DEGAS.hidden_feats," ",DEGAS.do_prc," ",DEGAS.lambda1," ",DEGAS.lambda2," ",DEGAS.lambda3))
   ccModel1 = readOutputFiles(tmpDir,model_type,architecture)
-  #system(paste0('rm -rf ',tmpDir))
   return(ccModel1)
 }
 
