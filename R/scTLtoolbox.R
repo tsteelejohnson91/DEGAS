@@ -6,8 +6,9 @@
 # Initializing the package
 
 initDEGAS <- function(){
-  pyloc <<- "python"
-  toolsPath <<- paste0(.libPaths()[1],"/DEGAS/tools/")
+  pkg.env <- new.env()
+  pkg.env$pyloc <- "python"
+  pkg.env$toolsPath <- paste0(.libPaths()[1],"/DEGAS/tools/")
 }
 
 #***************************************************************
@@ -23,7 +24,7 @@ checkOS <- function(){
 }
 
 checkForPy <- function(){
-  return(system(paste0(pyloc," -V")))
+  return(system(paste0(pkg.env$pyloc," -V")))
 }
 
 checkForTF <- function(){
@@ -31,7 +32,7 @@ checkForTF <- function(){
 }
 
 setPython <- function(path2python){
-  pyloc <<- path2python
+  pkg.env$pyloc <- path2python
   #Sys.setenv(PATH = paste(c(path2python,Sys.getenv("PATH")),collapse = .Platform$path.sep))
 }
 
@@ -142,8 +143,8 @@ makeExec <- function(tmpDir,FFdepth,model_type){
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
-  system(paste0('cp ',toolsPath,model_type,'MTL_p1.py ',tmpDir))
-  system(paste0('cp ',toolsPath,model_type,'MTL_p3.py ',tmpDir))
+  system(paste0('cp ', pkg.env$toolsPath, model_type,'MTL_p1.py ',tmpDir))
+  system(paste0('cp ', pkg.env$toolsPath, model_type,'MTL_p3.py ',tmpDir))
   outlines = c()
   if (FFdepth == 1){
     outlines[length(outlines)+1] = "layerF=add_layer(xs,Fsc,hidden_feats,activation_function=tf.sigmoid,dropout_function=True,lambda1=lambda1, keep_prob1=kprob)"
@@ -211,8 +212,8 @@ makeExec2 <- function(tmpDir,FFdepth,model_type){
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
-  system(paste0('cp ',toolsPath,model_type,'MTL_p1.py ',tmpDir))
-  system(paste0('cp ',toolsPath,model_type,'MTL_p3.py ',tmpDir))
+  system(paste0('cp ', pkg.env$toolsPath, model_type,'MTL_p1.py ',tmpDir))
+  system(paste0('cp ', pkg.env$toolsPath, model_type,'MTL_p3.py ',tmpDir))
   outlines = c()
   if (FFdepth == 1){
     outlines[length(outlines)+1] = "layerF=add_layer(xs,Fsc,hidden_feats,activation_function=tf.sigmoid,dropout_function=True,lambda1=lambda1, keep_prob1=kprob)"
@@ -309,7 +310,7 @@ runCCMTL <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FF
   }
   writeInputFiles(scExp,scLab,patExp,patLab,tmpDir)
   #message(checkForPy())                                                                        #changed 20200320
-  system(paste0(pyloc," ",tmpDir,model_type,"MTL.py ", tmpDir)) #Update this for reticulate    #changed 20200320
+  system(paste0(pkg.env$pyloc," ",tmpDir,model_type,"MTL.py ", tmpDir)) #Update this for reticulate    #changed 20200320
   #py_run_file(paste0(tmpDir,model_type,"MTL.py ", tmpDir))                                      #changed 20200320
   ccModel1 = readOutputFiles(tmpDir,model_type,architecture)
   #system(paste0('rm -rf ',tmpDir))
