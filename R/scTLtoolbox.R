@@ -6,9 +6,17 @@
 # Initializing the package
 
 initDEGAS <- function(){
-  pkg.env <- new.env()
-  pkg.env$pyloc <- "python"
-  pkg.env$toolsPath <- paste0(.libPaths()[1],"/DEGAS/tools/")
+  DEGAS.env <- new.env()
+  DEGAS.env$pyloc <- "python"
+  DEGAS.env$toolsPath <- paste0(.libPaths()[1],"/DEGAS/tools/")
+  DEGAS.env$train_steps <- 2000
+  DEGAS.env$scbatch_sz <- 200
+  DEGAS.env$patbatch_sz <- 50
+  DEGAS.env$hidden_feats <- 50
+  DEGAS.env$do_prc <- 0.5
+  DEGAS.env$lambda1 <- 3.0
+  DEGAS.env$lambda2 <- 3.0
+  DEGAS.env$lambda3 <- 3.0
 }
 
 #***************************************************************
@@ -24,7 +32,7 @@ checkOS <- function(){
 }
 
 checkForPy <- function(){
-  return(system(paste0(pkg.env$pyloc," -V")))
+  return(system(paste0(DEGAS.env$pyloc," -V")))
 }
 
 checkForTF <- function(){
@@ -32,8 +40,40 @@ checkForTF <- function(){
 }
 
 setPython <- function(path2python){
-  pkg.env$pyloc <- path2python
+  DEGAS.env$pyloc <- path2python
   #Sys.setenv(PATH = paste(c(path2python,Sys.getenv("PATH")),collapse = .Platform$path.sep))
+}
+
+set_training_steps <- function(inp){
+  DEGAS.env$train_steps <- inp
+}
+
+set_single_cell_batch_size <- function(inp){
+  DEGAS.env$scbatch_sz <- inp
+}
+
+set_patient_batch_size <- function(inp){
+  DEGAS.env$patbatch_sz <- inp
+}
+
+set_hidden_feature_number <- function(inp){
+  DEGAS.env$hidden_feats <- inp
+}
+
+set_dropout_keep_fraction <- function(inp){
+  DEGAS.env$do_prc <- inp
+}
+
+set_l2_regularization_term <- function(inp){
+  DEGAS.env$lambda1 <- inp
+}
+
+set_patient_loss_term <- function(inp){
+  DEGAS.env$lambda2 <- inp
+}
+
+set_MMD_loss_term <- function(inp){
+  DEGAS.env$lambda3 <- inp
 }
 
 TFsetup <- function(){
@@ -143,8 +183,8 @@ makeExec <- function(tmpDir,FFdepth,model_type){
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
-  system(paste0('cp ', pkg.env$toolsPath, model_type,'MTL_p1.py ',tmpDir))
-  system(paste0('cp ', pkg.env$toolsPath, model_type,'MTL_p3.py ',tmpDir))
+  system(paste0('cp ',DEGAS.env$toolsPath,model_type,'MTL_p1.py ',tmpDir))
+  system(paste0('cp ',DEGAS.env$toolsPath,model_type,'MTL_p3.py ',tmpDir))
   outlines = c()
   if (FFdepth == 1){
     outlines[length(outlines)+1] = "layerF=add_layer(xs,Fsc,hidden_feats,activation_function=tf.sigmoid,dropout_function=True,lambda1=lambda1, keep_prob1=kprob)"
@@ -212,8 +252,8 @@ makeExec2 <- function(tmpDir,FFdepth,model_type){
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
-  system(paste0('cp ', pkg.env$toolsPath, model_type,'MTL_p1.py ',tmpDir))
-  system(paste0('cp ', pkg.env$toolsPath, model_type,'MTL_p3.py ',tmpDir))
+  system(paste0('cp ',DEGAS.env$toolsPath,model_type,'MTL_p1.py ',tmpDir))
+  system(paste0('cp ',DEGAS.env$toolsPath,model_type,'MTL_p3.py ',tmpDir))
   outlines = c()
   if (FFdepth == 1){
     outlines[length(outlines)+1] = "layerF=add_layer(xs,Fsc,hidden_feats,activation_function=tf.sigmoid,dropout_function=True,lambda1=lambda1, keep_prob1=kprob)"
@@ -309,11 +349,20 @@ runCCMTL <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FF
     stop('Incorrect architecture argument')
   }
   writeInputFiles(scExp,scLab,patExp,patLab,tmpDir)
-  #message(checkForPy())                                                                        #changed 20200320
-  system(paste0(pkg.env$pyloc," ",tmpDir,model_type,"MTL.py ", tmpDir)) #Update this for reticulate    #changed 20200320
-  #py_run_file(paste0(tmpDir,model_type,"MTL.py ", tmpDir))                                      #changed 20200320
+  message(checkForPy())
+  system(paste0(DEGAS.env$pyloc," ",
+                tmpDir,model_type,"MTL.py ",
+                tmpDir, " ",
+                DEGAS.env$train_steps," ",
+                DEGAS.env$scbatch_sz," ",
+                DEGAS.env$patbatch_sz," ",
+                DEGAS.env$hidden_feats," ",
+                DEGAS.env$do_prc," ",
+                DEGAS.env$lambda1," ",
+                DEGAS.env$lambda2," ",
+                DEGAS.env$lambda3))
+
   ccModel1 = readOutputFiles(tmpDir,model_type,architecture)
-  #system(paste0('rm -rf ',tmpDir))
   return(ccModel1)
 }
 

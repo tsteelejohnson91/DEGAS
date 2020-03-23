@@ -249,16 +249,18 @@ censor = Ypat[:,1]
 #scaler = preprocessing.MinMaxScaler()
 #Xsc = np.transpose(scaler.fit_transform(np.transpose(stats.zscore(Xsc+0.01,0))))
 #Xpat = np.transpose(scaler.fit_transform(np.transpose(stats.zscore(Xpat+0.01,0))))
+
 #***********************************************************************
 # Hyperparameters
-train_steps = 2000
-scbatch_sz = 500
-patbatch_sz = 50
-hidden_feats = 50			# USED TO BE 40
-do_prc = 0.5				# USED TO BE 0.5
-lambda1 = 3.0
-lambda2 = 3.0
-lambda3 = 3.0
+train_steps = int(sys.argv[2])
+scbatch_sz = int(sys.argv[3])
+patbatch_sz = int(sys.argv[4])
+hidden_feats = int(sys.argv[5])
+do_prc = float(sys.argv[6])
+lambda1 = float(sys.argv[7])
+lambda2 = float(sys.argv[8])
+lambda3 = float(sys.argv[9])
+
 #***********************************************************************
 # Building network
 kprob = tf.placeholder(tf.float32)
