@@ -1,12 +1,18 @@
 #***************************************************************
 # Single Cell Transfer Learning Toolbox
 #
-library(flowCore)
-library(car)
-library(Seurat)
+
+#***************************************************************
+# Initializing the package
+
+initDEGAS <- function(){
+  pyloc <<- "python"
+  toolsPath <<- paste0(.libPaths()[1],"/DEGAS/tools/")
+}
 
 #***************************************************************
 # General utility functions
+
 getExtension <- function(file){
   ex <- strsplit(basename(file), split="\\.")[[1]]
   return(ex[length(ex)])
@@ -17,7 +23,7 @@ checkOS <- function(){
 }
 
 checkForPy <- function(){
-  return(system2("python",args="-V"))
+  return(system(paste0(pyloc," -V")))
 }
 
 checkForTF <- function(){
@@ -25,7 +31,8 @@ checkForTF <- function(){
 }
 
 setPython <- function(path2python){
-  Sys.setenv(PATH = paste(c(path2python,Sys.getenv("PATH")),collapse = .Platform$path.sep))
+  pyloc <<- path2python
+  #Sys.setenv(PATH = paste(c(path2python,Sys.getenv("PATH")),collapse = .Platform$path.sep))
 }
 
 TFsetup <- function(){
@@ -135,8 +142,8 @@ makeExec <- function(tmpDir,FFdepth,model_type){
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
-  system(paste0('cp ',model_type,'MTL_p1.py ',tmpDir))
-  system(paste0('cp ',model_type,'MTL_p3.py ',tmpDir))
+  system(paste0('cp ',toolsPath,model_type,'MTL_p1.py ',tmpDir))
+  system(paste0('cp ',toolsPath,model_type,'MTL_p3.py ',tmpDir))
   outlines = c()
   if (FFdepth == 1){
     outlines[length(outlines)+1] = "layerF=add_layer(xs,Fsc,hidden_feats,activation_function=tf.sigmoid,dropout_function=True,lambda1=lambda1, keep_prob1=kprob)"
@@ -204,8 +211,8 @@ makeExec2 <- function(tmpDir,FFdepth,model_type){
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
-  system(paste0('cp ',model_type,'MTL_p1.py ',tmpDir))
-  system(paste0('cp ',model_type,'MTL_p3.py ',tmpDir))
+  system(paste0('cp ',toolsPath,model_type,'MTL_p1.py ',tmpDir))
+  system(paste0('cp ',toolsPath,model_type,'MTL_p3.py ',tmpDir))
   outlines = c()
   if (FFdepth == 1){
     outlines[length(outlines)+1] = "layerF=add_layer(xs,Fsc,hidden_feats,activation_function=tf.sigmoid,dropout_function=True,lambda1=lambda1, keep_prob1=kprob)"
@@ -301,8 +308,9 @@ runCCMTL <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FF
     stop('Incorrect architecture argument')
   }
   writeInputFiles(scExp,scLab,patExp,patLab,tmpDir)
-  message(checkForPy())
-  system(paste0("python ",tmpDir,model_type,"MTL.py ", tmpDir))
+  #message(checkForPy())                                                                        #changed 20200320
+  system(paste0(pyloc," ",tmpDir,model_type,"MTL.py ", tmpDir)) #Update this for reticulate    #changed 20200320
+  #py_run_file(paste0(tmpDir,model_type,"MTL.py ", tmpDir))                                      #changed 20200320
   ccModel1 = readOutputFiles(tmpDir,model_type,architecture)
   #system(paste0('rm -rf ',tmpDir))
   return(ccModel1)
@@ -415,151 +423,3 @@ splitKfoldCV <- function(N,k){
   }
   return(grpIdx)
 }
-
-loadSCdat <- function(fname){
-  if (getExtension(fname)=="rds"){
-    return(readRDS(fname))
-  }else{
-    message('Error: File is not an RDS file')
-  }
-}
-
-loadFCdat <- function(dirPath,flag){
-  files = list.files(dirPath)
-  files = files[grep(flag,files)]
-  for ( file in files){
-    tmp = read.FCS(paste0(dirPath,'/',file))
-    if(file==files[1]){
-      out = FFtoDF(tmp)
-    }else{
-      out = rbind(out,FFtoDF(tmp))
-    }
-  }
-  cnames = sub('.*_','',colnames(out))
-  cnames_tab = table(cnames)
-  dup_cnames = names(cnames_tab)[which(cnames_tab>1)]
-  rem = remDupIdx(transpose(out),dup_cnames,cnames)
-  if(!is.null(rem)){
-    out = out[,-rem]
-    colnames(out) = cnames[-rem]
-  }else{
-    colnames(out) = cnames
-  }
-  return(out)
-}
-
-remDupIdx <- function(X,dup_rnames,rnames){
-  rem = c()
-  for (dup_rname in dup_rnames){
-    tmp = which(rnames==dup_rname)
-    Xtmp = X[tmp,]
-    Xmean = rowMeans(as.matrix(Xtmp[,2:dim(Xtmp)[2]]))
-    Xmean[is.na(Xmean)] = 0
-    Xmean = abs(Xmean)
-    rem = c(rem,tmp[which(Xmean!=max(Xmean,na.rm=TRUE))])
-  }
-  return(rem)
-}
-
-loadPTdat <- function(fname,type){
-  if(getExtension(fname)=="txt"){sep='\t'}
-  else if(getExtension(fname)=="csv"){sep=','}
-  else{message('Error: File not csv or txt')}
-  if(type=='tsunami'){
-    X = read.csv(file=fname,sep=sep)
-    X = X[X$Gene_Symbol!='?',]
-    rnames = table(X$Gene_Symbol)
-    dup_rnames = names(rnames)[which(rnames>1)]
-    rem = remDupIdx(X,dup_rnames,X$Gene_Symbol)
-    X=X[-rem,]
-    row.names(X) = X$Gene_Symbol
-    X$Gene_Symbol = NULL
-    colnames(X) = substr(colnames(X),1,16)
-    return(X)
-  }else if(type=='rppa'){
-    X = read.csv(file=fname,sep=sep)
-    rnames = sub('[|].*','',X$Composite.Element.REF)
-    rnames_tab = table(rnames)
-    dup_rnames = names(rnames_tab)[which(rnames_tab>1)]
-    rem = remDupIdx(X,dup_rnames,rnames)
-    X = X[-rem,]
-    row.names(X) = rnames[-rem]
-    X$Composite.Element.REF = NULL
-    colnames(X) = substr(colnames(X),1,16)
-    return(X)
-  }
-}
-
-loadPTclin <- function(fname){
-  X = read.csv(file=fname)
-  return(X)
-}
-
-'%notin%' <- Negate('%in%')
-
-# following function from ssmpsn2/flowAssist
-FFtoDF<-function(FF){
-  if(class(FF) == "flowFrame"){
-    return(as.data.frame(exprs(FF)))
-  }
-  if(class(FF) == "list"){
-    frameList<-list()
-    length(frameList)<-length(FF)
-    for(i in 1:length(FF)){
-      if(class(FF[[i]]) == "flowFrame"){
-        frameList[[i]]<-as.data.frame(flowCore::exprs(FF[[i]]))
-        names(frameList)[[i]]<-names(FF)[[i]]
-      }
-      else{
-        warning(paste("Object at index",i,"not of type flowFrame"))
-      }
-    }
-    return(frameList)
-  }
-  else {
-    stop("Object is not of type flowFrame")
-  }
-}
-
-# Cluster single cell data with seurat
-genSeuratClusts <- function(sc_obj){
-  sc_obj <- as.Seurat(sc_obj, counts = "counts", data = "logcounts")
-  sc_obj[["percent.mt"]] <- PercentageFeatureSet(sc_obj, pattern = "^MT-")
-  sc_obj <- NormalizeData(sc_obj, normalization.method = "LogNormalize", scale.factor = 10000)
-  sc_obj[["percent.mt"]] <- PercentageFeatureSet(sc_obj, pattern = "^MT-")
-  sc_obj <- subset(sc_obj, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
-  sc_obj <- NormalizeData(sc_obj, normalization.method = "LogNormalize", scale.factor = 10000)
-  sc_obj <- FindVariableFeatures(sc_obj, selection.method = "vst", nfeatures = 2000)
-  all.genes <- rownames(sc_obj)
-  sc_obj <- ScaleData(sc_obj, features = all.genes)
-  sc_obj <- RunPCA(sc_obj, features = VariableFeatures(object = sc_obj))
-  #sc_obj <- JackStraw(sc_obj, num.replicate = 100)
-  #sc_obj <- ScoreJackStraw(sc_obj, dims = 1:20)
-  sc_obj <- FindNeighbors(sc_obj, dims = 1:10)
-  sc_obj <- FindClusters(sc_obj, resolution = 0.5)
-  return(sc_obj)
-}
-
-# Load in a GMT file
-loadGMT <- function(fname){
-  out = list()
-  lines = readLines(fname)
-  for (line in lines){
-    line = strsplit(line,'\t')[[1]]
-    out[[line[1]]] = line[3:length(line)]
-  }
-  return(out)
-}
-
-# Get a feature vector from a dataframe
-getFeat = function(vec,df,colm,colo){
-  tmp = vec;
-  for (i in 1:length(vec)){
-    tmp[i] = df[which(df[,colm]==vec[i])[1],colo]
-  }
-  return(tmp)
-}
-
-#!!!END OF PACKAGE PROTOTYPE CODE!!!!!!!!!!
-#!!!!!!END OF PACKAGE PROTOTYPE CODE!!!!!!!
-#!!!!!!!!!END OF PACKAGE PROTOTPYE CODE!!!!

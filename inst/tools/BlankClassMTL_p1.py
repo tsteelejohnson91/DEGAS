@@ -1,16 +1,19 @@
 import tensorflow as tf				#NEED
+if int(tf.__version__[0])>1:
+	import tensorflow.compat.v1 as tf
+	tf.disable_v2_behavior()  
 from functools import partial		#NEED
-slim = tf.contrib.slim
-import numpy as np
-import pandas as pd
-import math
-from scipy import stats
-from sklearn import preprocessing
-import scipy.io as sio
-from os import listdir
-import os
-import sys
-from os.path import isfile, join
+#slim = tf.contrib.slim
+import numpy as np					#NEED
+#import pandas as pd
+import math							#NEED
+#from scipy import stats				
+#from sklearn import preprocessing
+#import scipy.io as sio
+#from os import listdir
+import os							#NEED
+import sys							#NEED
+from os.path import isfile, join	#NEED
 
 #***********************************************************************
 # Add weights to hidden layer
@@ -209,9 +212,35 @@ def resample(prc_cut,Y,train):
     return list(set(train)-set(rem))+add
     #return np.concatenate((list([val for val in train if val not in rem]),add));		# slower for smaller datasets
 
-def resample_under():
-	train = np.squeeze(train)
-	
+#*******TESTING BELOW!!!!********************
+def resample_mixGamma(X,Y,train,nsamp,depth):
+    add = list()
+    train = np.squeeze(train)
+    colsums = np.sum(Y[train,:],axis=0)
+    samp_per_class = round(nsamp/len(colsums))
+    idx = list()
+    for i in range(len(colsums)):
+        idx = idx + [np.squeeze(np.where(Y[train,i]>=1)).tolist()];
+        if samp_per_class > colsums[i]:
+            choice = np.random.choice(train[idx[i]],int(samp_per_class),replace=True)
+        else:
+            choice = np.random.choice(train[idx[i]],int(samp_per_class),replace=False)
+        add = add + choice.tolist()
+    tmpX = np.zeros([nsamp,X.shape[1]])
+    tmpY = np.zeros([nsamp,Y.shape[1]])
+    for i in range(nsamp):
+        percBinom = np.random.gamma(shape=1,size=len(colsums))
+        percBinom = percBinom/sum(percBinom)
+        intBinom = np.round(percBinom*depth)
+        tmpIdx = list()
+        for j in range(len(colsums)):
+            if int(intBinom[j]) > colsums[j]:
+                tmpIdx = tmpIdx + np.random.choice(train[idx[j]], int(intBinom[j]),replace=True).tolist()
+            else:
+                tmpIdx = tmpIdx + np.random.choice(train[idx[j]], int(intBinom[j]),replace=False).tolist()
+        tmpX[i,:] = np.mean(X[tmpIdx,:],axis=0)
+        tmpY[i,:] = intBinom/sum(intBinom)
+    return(np.concatenate((X[add,:],tmpX), axis=0),np.concatenate((Y[add,:],tmpY)))
 
 def intersect(lst1,lst2):
 	return(list(set(lst1) & set(lst2)))
@@ -225,7 +254,7 @@ def rank(inputdat, axis=-1):
 data_folder = sys.argv[1]
 Xsc = np.loadtxt(data_folder+'scExp.csv',delimiter=',',skiprows=1)
 #Ysc = np.loadtxt(data_folder+'scLab.csv',delimiter=',',skiprows=1)
-Nsc = Ysc.shape[0]
+Nsc = Xsc.shape[0]
 Fsc = Xsc.shape[1]
 #Lsc = Ysc.shape[1]
 idx_sc = np.arange(Nsc)
@@ -233,37 +262,34 @@ np.random.shuffle(idx_sc)
 
 Xpat = np.loadtxt(data_folder+'patExp.csv',delimiter=',',skiprows=1)
 Ypat = np.loadtxt(data_folder+'patLab.csv',delimiter=',',skiprows=1)
-Npat = Ypat.shape[0]
+Npat = Xpat.shape[0]
 Fpat = Xpat.shape[1]
-Lpat = 1					# Lpat is 1 bc it is a proportional hazards model
+Lpat = Ypat.shape[1]
 idx_pat = np.arange(Npat)
 np.random.shuffle(idx_pat)
-survtime = Ypat[:,0]
-censor = Ypat[:,1]
+
+#scaler = preprocessing.MinMaxScaler()
+#Xsc = np.transpose(scaler.fit_transform(np.transpose(stats.zscore(Xsc,0))))
+#Xpat = np.transpose(scaler.fit_transform(np.transpose(stats.zscore(Xpat,0))))
 
 #***********************************************************************
-# Normalizing data
-#scaler = preprocessing.MinMaxScaler()
-#Xsc = np.transpose(scaler.fit_transform(np.transpose(stats.zscore(Xsc+0.01,0))))
-#Xpat = np.transpose(scaler.fit_transform(np.transpose(stats.zscore(Xpat+0.01,0))))
-#***********************************************************************
 # Hyperparameters
-train_steps = 800
-scbatch_sz = 200
+train_steps = 2000			# was 2000
+scbatch_sz = 200			# was 500
 patbatch_sz = 50
-hidden_feats = 50			# USED TO BE 40
-do_prc = 0.5				# USED TO BE 0.5
+hidden_feats = 50			# was 50
+do_prc = 0.5
 lambda1 = 3.0
 lambda2 = 3.0
-lambda3 = 3.0
+lambda3 = 3.0				# was 3
 #***********************************************************************
 # Building network
 kprob = tf.placeholder(tf.float32)
 xs = tf.placeholder(tf.float32, [None,Fsc])
 #ys_sc = tf.placeholder(tf.float32, [None,Lsc])
-r_pat = tf.placeholder(tf.float32, [None,None])
-c_pat = tf.placeholder(tf.float32, [None])
-#es = tf.placeholder(tf.float32, [None,Lsc])			#NEW UNTESTED
+ys_pat = tf.placeholder(tf.float32, [None,Lpat])
+#es = tf.placeholder(tf.float32, [None,Lsc])
 ps = tf.placeholder(tf.float32, [None,Lpat])
 lsc = tf.placeholder(tf.int32, shape=())
 lpat = tf.placeholder(tf.int32, shape=())
+

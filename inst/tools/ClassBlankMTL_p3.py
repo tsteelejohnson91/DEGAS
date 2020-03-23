@@ -26,11 +26,12 @@ tensor_train = {xs: np.concatenate([np.squeeze(Xsc[train_sc2,]),np.squeeze(Xpat[
 init=tf.global_variables_initializer()
 #***********************************************************************
 # training model
-run_options = tf.RunOptions(report_tensor_allocations_upon_oom=True)
+#run_options = tf.RunOptions(report_tensor_allocations_upon_oom=True)
 sess=tf.Session()
 sess.run(init)
 for i in range(train_steps+1):
-	sess.run(train_step1, feed_dict=tensor_train,options=run_options)
+	#sess.run(train_step1, feed_dict=tensor_train,options=run_options)
+	sess.run(train_step1, feed_dict=tensor_train)
 	# BELOW IS UNTESTED
 	#sess.run(train_step2, feed_dict={es: sess.run(predict_sc,feed_dict={xs:np.squeeze(Xpat[train_pat2,:]), kprob: do_prc}), ps: sess.run(predict_pat,feed_dict={xs:np.squeeze(Xpat[train_pat2,:]), kprob: do_prc}), kprob: do_prc})
 	if(i % 50 == 0):
