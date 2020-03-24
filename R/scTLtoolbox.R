@@ -6,17 +6,16 @@
 # Initializing the package
 
 initDEGAS <- function(){
-  DEGAS.env <- new.env()
-  DEGAS.env$pyloc <- "python"
-  DEGAS.env$toolsPath <- paste0(.libPaths()[1],"/DEGAS/tools/")
-  DEGAS.env$train_steps <- 2000
-  DEGAS.env$scbatch_sz <- 200
-  DEGAS.env$patbatch_sz <- 50
-  DEGAS.env$hidden_feats <- 50
-  DEGAS.env$do_prc <- 0.5
-  DEGAS.env$lambda1 <- 3.0
-  DEGAS.env$lambda2 <- 3.0
-  DEGAS.env$lambda3 <- 3.0
+  DEGAS.pyloc <<- "python3"
+  DEGAS.toolsPath <<- paste0(.libPaths()[1],"/DEGAS/tools/")
+  DEGAS.train_steps <<- 2000
+  DEGAS.scbatch_sz <<- 200
+  DEGAS.patbatch_sz <<- 50
+  DEGAS.hidden_feats <<- 50
+  DEGAS.do_prc <<- 0.5
+  DEGAS.lambda1 <<- 3.0
+  DEGAS.lambda2 <<- 3.0
+  DEGAS.lambda3 <<- 3.0
 }
 
 #***************************************************************
@@ -32,48 +31,48 @@ checkOS <- function(){
 }
 
 checkForPy <- function(){
-  return(system(paste0(DEGAS.env$pyloc," -V")))
+  return(system(paste0(DEGAS.pyloc," -V")))
 }
 
 checkForTF <- function(){
-  return(system("python -c 'import tensorflow'"))
+  return(system(paste0(DEGAS.pyloc," -c 'import tensorflow'")))
 }
 
 setPython <- function(path2python){
-  DEGAS.env$pyloc <- path2python
+  DEGAS.pyloc <<- path2python
   #Sys.setenv(PATH = paste(c(path2python,Sys.getenv("PATH")),collapse = .Platform$path.sep))
 }
 
 set_training_steps <- function(inp){
-  DEGAS.env$train_steps <- inp
+  DEGAS.train_steps <<- inp
 }
 
 set_single_cell_batch_size <- function(inp){
-  DEGAS.env$scbatch_sz <- inp
+  DEGAS.scbatch_sz <<- inp
 }
 
 set_patient_batch_size <- function(inp){
-  DEGAS.env$patbatch_sz <- inp
+  DEGAS.patbatch_sz <<- inp
 }
 
 set_hidden_feature_number <- function(inp){
-  DEGAS.env$hidden_feats <- inp
+  DEGAS.hidden_feats <<- inp
 }
 
 set_dropout_keep_fraction <- function(inp){
-  DEGAS.env$do_prc <- inp
+  DEGAS.do_prc <<- inp
 }
 
 set_l2_regularization_term <- function(inp){
-  DEGAS.env$lambda1 <- inp
+  DEGAS.lambda1 <<- inp
 }
 
 set_patient_loss_term <- function(inp){
-  DEGAS.env$lambda2 <- inp
+  DEGAS.lambda2 <<- inp
 }
 
 set_MMD_loss_term <- function(inp){
-  DEGAS.env$lambda3 <- inp
+  DEGAS.lambda3 <<- inp
 }
 
 TFsetup <- function(){
@@ -183,8 +182,8 @@ makeExec <- function(tmpDir,FFdepth,model_type){
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
-  system(paste0('cp ',DEGAS.env$toolsPath,model_type,'MTL_p1.py ',tmpDir))
-  system(paste0('cp ',DEGAS.env$toolsPath,model_type,'MTL_p3.py ',tmpDir))
+  system(paste0('cp ',DEGAS.toolsPath,model_type,'MTL_p1.py ',tmpDir))
+  system(paste0('cp ',DEGAS.toolsPath,model_type,'MTL_p3.py ',tmpDir))
   outlines = c()
   if (FFdepth == 1){
     outlines[length(outlines)+1] = "layerF=add_layer(xs,Fsc,hidden_feats,activation_function=tf.sigmoid,dropout_function=True,lambda1=lambda1, keep_prob1=kprob)"
@@ -252,8 +251,8 @@ makeExec2 <- function(tmpDir,FFdepth,model_type){
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
-  system(paste0('cp ',DEGAS.env$toolsPath,model_type,'MTL_p1.py ',tmpDir))
-  system(paste0('cp ',DEGAS.env$toolsPath,model_type,'MTL_p3.py ',tmpDir))
+  system(paste0('cp ',DEGAS.toolsPath,model_type,'MTL_p1.py ',tmpDir))
+  system(paste0('cp ',DEGAS.toolsPath,model_type,'MTL_p3.py ',tmpDir))
   outlines = c()
   if (FFdepth == 1){
     outlines[length(outlines)+1] = "layerF=add_layer(xs,Fsc,hidden_feats,activation_function=tf.sigmoid,dropout_function=True,lambda1=lambda1, keep_prob1=kprob)"
@@ -350,18 +349,7 @@ runCCMTL <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FF
   }
   writeInputFiles(scExp,scLab,patExp,patLab,tmpDir)
   message(checkForPy())
-  system(paste0(DEGAS.env$pyloc," ",
-                tmpDir,model_type,"MTL.py ",
-                tmpDir, " ",
-                DEGAS.env$train_steps," ",
-                DEGAS.env$scbatch_sz," ",
-                DEGAS.env$patbatch_sz," ",
-                DEGAS.env$hidden_feats," ",
-                DEGAS.env$do_prc," ",
-                DEGAS.env$lambda1," ",
-                DEGAS.env$lambda2," ",
-                DEGAS.env$lambda3))
-
+  system(paste0(DEGAS.pyloc," ",tmpDir,model_type,"MTL.py ", tmpDir, " ",DEGAS.train_steps," ",DEGAS.scbatch_sz," ",DEGAS.patbatch_sz," ",DEGAS.hidden_feats," ",DEGAS.do_prc," ",DEGAS.lambda1," ",DEGAS.lambda2," ",DEGAS.lambda3))
   ccModel1 = readOutputFiles(tmpDir,model_type,architecture)
   return(ccModel1)
 }
@@ -456,15 +444,15 @@ splitKfoldCV <- function(N,k){
   sz = rep(floor(N/k),k)
   rem = N-sum(sz)
   if(rem>0){
-  cntr=0
-  for(i in 1:rem){
-    if(cntr==k){
-      cntr = 1
-    }else{
-      cntr = cntr+1
+    cntr=0
+    for(i in 1:rem){
+      if(cntr==k){
+        cntr = 1
+      }else{
+        cntr = cntr+1
+      }
+      sz[cntr] = sz[cntr]+1
     }
-    sz[cntr] = sz[cntr]+1
-  }
   }
   cntr = 0
   grpIdx = list()
