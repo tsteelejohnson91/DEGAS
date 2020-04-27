@@ -1,7 +1,10 @@
 #***************************************************************
+#***************************************************************
 # Single Cell Transfer Learning Toolbox
 # Travis S Johnson and Zhi Huang
+# Compatible with OSX and Linux
 
+#***************************************************************
 #***************************************************************
 # Initializing the package
 
@@ -19,83 +22,77 @@ initDEGAS <- function(){
 }
 
 #***************************************************************
+#***************************************************************
 # General utility functions
 
+# Return filename extension
 getExtension <- function(file){
   ex <- strsplit(basename(file), split="\\.")[[1]]
   return(ex[length(ex)])
 }
 
+# Return operating system
 checkOS <- function(){
   return(Sys.info()['sysname'])
 }
 
+# Return the python version information
 checkForPy <- function(){
   return(system(paste0(DEGAS.pyloc," -V")))
 }
 
+# Return if tensorflow loading information
 checkForTF <- function(){
   return(system(paste0(DEGAS.pyloc," -c 'import tensorflow'")))
 }
 
+# Manually reset the python path
 setPython <- function(path2python){
   DEGAS.pyloc <<- path2python
   #Sys.setenv(PATH = paste(c(path2python,Sys.getenv("PATH")),collapse = .Platform$path.sep))
 }
 
+# Manually reset the number of training steps
 set_training_steps <- function(inp){
   DEGAS.train_steps <<- inp
 }
 
+# Manually reset the single cell batch size
 set_single_cell_batch_size <- function(inp){
   DEGAS.scbatch_sz <<- inp
 }
 
+# Manually reset the single patient batch size
 set_patient_batch_size <- function(inp){
   DEGAS.patbatch_sz <<- inp
 }
 
+# Manually reset the number of hidden features
 set_hidden_feature_number <- function(inp){
   DEGAS.hidden_feats <<- inp
 }
 
+# Manually reset the dropout keep percentage (the percentage of nodes to keep)
 set_dropout_keep_fraction <- function(inp){
   DEGAS.do_prc <<- inp
 }
 
+# Manually reset the L2 regularization term (lambda 3)
 set_l2_regularization_term <- function(inp){
   DEGAS.lambda1 <<- inp
 }
 
+# Manually reset the patient loss term (lambda 1)
 set_patient_loss_term <- function(inp){
   DEGAS.lambda2 <<- inp
 }
 
+# Manually reset the MMD loss term (lambda 2)
 set_MMD_loss_term <- function(inp){
   DEGAS.lambda3 <<- inp
 }
 
-TFsetup <- function(){
-  hasPy <- checkForPy()
-  hasTF <- checkForTF()
-  if (!hasPy && !hasTF){
-    message("Python and TensorFlow implementations found")
-  }
-  if (hasPy || hasTF){
-    resp <- readline(prompt="Are you currently running TensorFlow from python3? [Y|N]")
-    if (toupper(resp) == 'Y'){
-      resp <- readline(prompt="Please input the path to the python version fro which you are currently running TensorFlow.")
-      setPython(resp)
-      hasPy <- checkForPy()
-      hasTF <- checkForTF()
-    }else if (toupper(resp) == 'N'){
-
-    }else{
-      stop("Incorrect answer to prompt. Please input either 'Y' or 'N'.")
-    }
-  }
-}
-
+#***************************************************************
 #***************************************************************
 # ccModel class and related functions
 
@@ -103,30 +100,39 @@ TFsetup <- function(){
 setClass("ccModel",slots=list(Bias="list",Theta="list",Activation="list",
                               Depth="numeric",Model_type="character",Architecture="character"))
 
+# zscore normalization
 normFunc <- function(x){return((x-mean(x, na.rm = T))/(sd(x, na.rm = T)+1e-3))}
 
+# scaling from 0-1
 scaleFunc <- function(x){return((x- min(x)) /(max(x)-min(x)+1e-3))}
 
+# center to 0
 centerFunc <- function(x){return(x-mean(x,na.rm=T))}
 
 # Activation functions and utilities
+
+# Sigmoid activation function
 sigmoid <- function(x) {
   1 / (1 + exp(-x))
 }
 
+# Log sum exp transformation (for softmax)
 logsumexp <- function (x) {
   y = max(x)
   y + log(sum(exp(x - y)))
 }
 
+# Softmax activation function
 softmax <- function (X) {
   return(t(apply(X,1,function(x) exp(x - logsumexp(x)))))
 }
 
+# Onehot labels to list of label names
 fromOneHot <- function(labMat){
   return(apply(labMat,1,function(x) colnames(labMat)[which(x==1)]))
 }
 
+# List of label names to a onehot matrix with labels as column names
 toOneHot <- function(labels){
   labs = unique(labels)
   out = matrix(0,length(labels),length(labs))
@@ -138,6 +144,7 @@ toOneHot <- function(labels){
   return(out)
 }
 
+# Convert matrix of output weights to max value for each row (row max = 1 and not row max = 0)
 probtoOneHot <- function(probMat){
   idx = apply(probMat,1,function(x) which(x==max(x)))
   probMat = probMat*0
@@ -148,6 +155,7 @@ probtoOneHot <- function(probMat){
 }
 
 # IO utilities for training
+# Write input to tmp files for tensorflow python algorithm from R
 writeInputFiles <- function(scExp,scLab,patExp,patLab,tmpDir){
   write.table(scExp,file=paste0(tmpDir, '/scExp.csv'), row.names=FALSE, sep=',')
   if(!is.null(scLab)){write.table(scLab,file=paste0(tmpDir, '/scLab.csv'), row.names=FALSE, sep=',')}
@@ -155,6 +163,7 @@ writeInputFiles <- function(scExp,scLab,patExp,patLab,tmpDir){
   if(!is.null(patLab)){write.table(patLab,file=paste0(tmpDir, '/patLab.csv'), row.names=FALSE, sep=',')}
 }
 
+# Read output files from tensorflow python algorithm into R
 readOutputFiles <- function(tmpDir,Model_type,architecture){
   activations = read.table(file=paste0(tmpDir, 'Activations.csv'), row.names=NULL, header=FALSE, sep=',',stringsAsFactors=FALSE)
   activations = activations[[1]]
@@ -178,6 +187,7 @@ readOutputFiles <- function(tmpDir,Model_type,architecture){
   return(new('ccModel',Bias=Biases,Theta=Thetas,Activation=Activations,Depth=depth,Model_type=Model_type,Architecture=architecture))
 }
 
+# Make python executable for standard (feedforward) implementation
 makeExec <- function(tmpDir,FFdepth,model_type){
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
@@ -247,6 +257,7 @@ makeExec <- function(tmpDir,FFdepth,model_type){
   system(paste0("cat ",tmpDir,model_type,"MTL_p1.py ",tmpDir,model_type,"MTL_p2.py ",tmpDir,model_type,"MTL_p3.py ",tmpDir,model_type,"MTL_p4.py > ",tmpDir,model_type,"MTL.py"))
 }
 
+# Make python executable for densenet implementation
 makeExec2 <- function(tmpDir,FFdepth,model_type){
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
@@ -335,7 +346,7 @@ makeExec2 <- function(tmpDir,FFdepth,model_type){
   system(paste0("cat ",tmpDir,model_type,"MTL_p1.py ",tmpDir,model_type,"MTL_p2.py ",tmpDir,model_type,"MTL_p3.py ",tmpDir,model_type,"MTL_p4.py > ",tmpDir,model_type,"MTL.py"))
 }
 
-# runClassClassMTL training model function
+# train model wrapper function
 runCCMTL <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FFdepth){
   system('pwd')
   system(paste0('rm -rf ',tmpDir))
@@ -354,6 +365,7 @@ runCCMTL <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FF
   return(ccModel1)
 }
 
+# Make predictions based on a trained DEGAS model
 predClass <- function(ccModel1,Exp,scORpat){
   if(ccModel1@Architecture=="DenseNet"){
     return(predClass2(ccModel1,Exp,scORpat))
@@ -364,21 +376,18 @@ predClass <- function(ccModel1,Exp,scORpat){
   }
 }
 
-# Prediction for standard architecture
+# Prediction from trained standard architecture model
 predClass1 <- function(ccModel1,Exp,scORpat){
   Z = Exp
   rm(Exp)
   if (ccModel1@Model_type=='BlankClass' || ccModel1@Model_type=='ClassBlank'){
-    #message('A')
     for (i in 1:(ccModel1@Depth)){
       calcZ = paste0(ccModel1@Activation[[i]],"(sweep((as.matrix(Z) %*% ccModel1@Theta[[",as.character(i),"]]),2,ccModel1@Bias[[",as.character(i),"]],'+'))")
       Z = eval(parse(text=calcZ))
     }
     return(Z)
   }else{
-    #message('B')
     for (i in 1:(ccModel1@Depth-4)){
-      #message(i)
       calcZ = paste0(ccModel1@Activation[[i]],"(sweep((as.matrix(Z) %*% ccModel1@Theta[[",as.character(i),"]]),2,ccModel1@Bias[[",as.character(i),"]],'+'))")
       Z = eval(parse(text=calcZ))
     }
@@ -393,7 +402,7 @@ predClass1 <- function(ccModel1,Exp,scORpat){
   return(eval(parse(text=calcPred)))
 }
 
-# Prediction for DenseNet architecture
+# Prediction from trained densenet architecture model
 predClass2 <- function(ccModel1,Exp,scORpat){
   Z = Exp
   rm(Exp)
@@ -427,6 +436,7 @@ predClass2 <- function(ccModel1,Exp,scORpat){
   return(eval(parse(text=calcPred)))
 }
 
+# Predict patient class from proportions of single cell classes
 predPatClassFromSCClass <- function(ccModel1,Exp){
   Z1 = sigmoid(sweep((Exp %*% ccModel4@Theta4),2,ccModel1@Bias4,'+'))
   return(softmax(sweep((Z1 %*% ccModel1@Theta5),2,ccModel1@Bias5,'+')))
@@ -486,15 +496,17 @@ remDupIdx <- function(X,dup_rnames,rnames){
   return(rem)
 }
 
+#***************************************************************
+# Post-processing functions
+
+# Quantile normalization
 quantNorm <- function(df,center='median',rescale=TRUE,rescale_mult=1e4){
   df_rank <- apply(df,2,rank,ties.method="min")
   df_sorted <- data.frame(apply(df, 2, sort))
   df_mean <- apply(df_sorted, 1, mean)
-
   index_to_mean <- function(my_index, my_mean){
     return(my_mean[my_index])
   }
-
   df_final <- apply(df_rank, 2, index_to_mean, my_mean=df_mean)
   rownames(df_final) <- rownames(df)
   meds = eval(parse(text=paste0("apply(df_final, 2, ",center,")")))
@@ -508,10 +520,12 @@ quantNorm <- function(df,center='median',rescale=TRUE,rescale_mult=1e4){
   return(df_final)
 }
 
+# Return euclidean distance between two points
 euclDist <- function(loc1,loc2){
   return(sqrt(sum((loc1 - loc2)^2)))
 }
 
+# Return a matrix of all pairwise distances
 pairDist <- function(locs){
   N = dim(locs)[1]
   out = matrix(NA,N,N)
@@ -523,6 +537,7 @@ pairDist <- function(locs){
   return(out)
 }
 
+# Return k-nearest-neighbor smoothed probabilites
 knnSmooth <- function(probs,locs,k=5){
   out = probs
   dists = pairDist(locs)
@@ -542,6 +557,9 @@ knnSmooth <- function(probs,locs,k=5){
   return(out)
 }
 
+# return random sample (of s) which is evenly distributed across sample groups (g)
+# where each group has n samples.
+# Note: If a group has less than n samples, then all samples in that group are used.
 evenSamp <- function(s,g,n){
   groups = unique(g)
   out = list()
