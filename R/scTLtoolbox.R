@@ -485,3 +485,77 @@ remDupIdx <- function(X,dup_rnames,rnames){
   }
   return(rem)
 }
+
+quantNorm <- function(df,center='median',rescale=TRUE,rescale_mult=1e4){
+  df_rank <- apply(df,2,rank,ties.method="min")
+  df_sorted <- data.frame(apply(df, 2, sort))
+  df_mean <- apply(df_sorted, 1, mean)
+
+  index_to_mean <- function(my_index, my_mean){
+    return(my_mean[my_index])
+  }
+
+  df_final <- apply(df_rank, 2, index_to_mean, my_mean=df_mean)
+  rownames(df_final) <- rownames(df)
+  meds = eval(parse(text=paste0("apply(df_final, 2, ",center,")")))
+  df_final = sweep(df_final, 2, meds, '-')
+  if(rescale){
+    df_final[df_final>0] = eval(parse(text=paste0("log2(",rescale_mult,"*df_final[df_final>0])")))
+    df_final[df_final<0] = eval(parse(text=paste0("-log2(-",rescale_mult,"*df_final[df_final<0])")))
+    meds = eval(parse(text=paste0("apply(df_final, 2, ",center,")")))
+    df_final = sweep(df_final, 2, meds, '-')
+  }
+  return(df_final)
+}
+
+euclDist <- function(loc1,loc2){
+  return(sqrt(sum((loc1 - loc2)^2)))
+}
+
+pairDist <- function(locs){
+  N = dim(locs)[1]
+  out = matrix(NA,N,N)
+  for(i in 1:N){
+    for(j in 1:i){
+      out[i,j] = out[j,i] = euclDist(locs[i,],locs[j,])
+    }
+  }
+  return(out)
+}
+
+knnSmooth <- function(probs,locs,k=5){
+  out = probs
+  dists = pairDist(locs)
+  if(class(probs)=="numeric"){
+    N = length(probs)
+    for(i in 1:N){
+      idx = order(dists[i,])
+      out[i] = mean(probs[idx[1:k]])
+    }
+  }else{
+    N = dim(locs)[1]
+    for(i in 1:N){
+      idx = order(dists[i,])
+      out[i,] = colMeans(probs[idx[1:k],])
+    }
+  }
+  return(out)
+}
+
+evenSamp <- function(s,g,n){
+  groups = unique(g)
+  out = list()
+  for (group in groups){
+    if(sum(g==group)>=n){
+      out[[group]] = sample(s[g==group],n,replace=FALSE)
+    }else if(sum(g==group)>0){
+      out[[group]] = sample(s[g==group],sum(g==group),replace=FALSE)
+    }else{
+      #Adding nothing
+    }
+  }
+  out = unlist(out)
+  return(out)
+}
+
+
