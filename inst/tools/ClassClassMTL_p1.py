@@ -15,10 +15,8 @@ import os							#NEED
 import sys							#NEED
 from os.path import isfile, join	#NEED
 
-# =============================================================================
+#***********************************************************************
 # Gaussian kernel matrix
-# =============================================================================
-
 
 def compute_pairwise_distances(x, y):
     if not len(x.get_shape()) == len(y.get_shape()) == 2:
@@ -33,6 +31,7 @@ def gaussian_kernel_matrix(x, y, sigmas):
     dist = compute_pairwise_distances(x, y)
     s = tf.matmul(beta, tf.reshape(dist, (1, -1)))
     return tf.reshape(tf.reduce_sum(tf.exp(-s), 0), tf.shape(dist))
+
 #***********************************************************************
 # Add weights to hidden layer
 def get_weight(shape, lambda1): 
