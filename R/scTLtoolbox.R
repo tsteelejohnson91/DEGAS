@@ -214,7 +214,7 @@ makeExec <- function(tmpDir,FFdepth,model_type){
   outlines = c()
   outlines[length(outlines)+1] = "#***********************************************************************"
   outlines[length(outlines)+1] = "# extracting coefficients from TF graph"
-  if(model_type=='ClassClass' || model_type=='CoxClass'){additional_layers = 3}
+  if(model_type=='ClassClass' || model_type=='ClassCox'){additional_layers = 3}
   else{additional_layers=0}
   for (i in 1:(FFdepth+1+additional_layers)){
     if (i==1){
