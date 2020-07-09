@@ -32,3 +32,6 @@ install_github("tsteelejohnson91/DEGAS")
 * functools
 * numpy
 * math
+
+### R
+* None required
