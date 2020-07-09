@@ -22,6 +22,11 @@ install_github("tsteelejohnson91/DEGAS")
 
 ## Prerequisites
 
+### OS
+* OSX
+* Linnux
+* Windows (coming soon)
+
 ### Python packages
 * Tensorflow
 * functools
