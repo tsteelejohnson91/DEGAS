@@ -24,7 +24,7 @@ install_github("tsteelejohnson91/DEGAS")
 
 ### OS
 * OSX
-* Linnux
+* Linux
 * Windows (coming soon)
 
 ### Python packages
