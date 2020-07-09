@@ -1,0 +1,90 @@
+---
+title: "AD_example"
+author: "Travis Johnson"
+date: "7/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load required packages
+```{r}
+library(DEGAS)
+library(Rtsne)
+library(grid)
+library(ggplot2)
+library(ggExtra)
+```
+
+# Load data
+```{r}
+scDat = read.csv('scDat.csv',row.names=1)
+scLab = read.csv('scLab.csv',row.names=1)
+patDat = read.csv('patDat.csv',row.names=1)
+patLab = read.csv('patLab.csv',row.names=1)
+```
+
+# Initialize DEGAS framework
+```{r}
+path.data = ''
+path.result = ''
+initDEGAS()
+set_training_steps(800)
+setPython("/usr/local/bin/python3")
+tmpDir = paste0(path.result, 'tmp/')
+```
+
+# Training DEGAS model
+```{r}
+ccModel1 = runCCMTL(scDat,scLab,patDat,patLab,tmpDir,'ClassClass','Standard',1)
+```
+
+# Predictions from DEGAS model
+```{r}
+scscPreds = predClass(ccModel1,scDat,'sc')
+patpatPreds = predClass(ccModel1,patDat,'pat')
+scpatPreds = predClass(ccModel1,scDat,'pat')
+patscPreds = predClass(ccModel1,patDat,'sc')
+colnames(patscPreds) = colnames(scscPreds) = colnames(scLab)
+colnames(scpatPreds) = colnames(patpatPreds) = colnames(patLab)
+```
+
+# Displaying single cells overlaid with AD impressions
+```{r}
+impressions_sc = quantNorm(scpatPreds)
+scDat_tsne = Rtsne(scDat)
+colnames(scDat_tsne$Y) = c('tSNE1','tSNE2')
+impressions_sc_smooth = knnSmooth(impressions_sc,scDat_tsne$Y)
+p = ggplot(as.data.frame(scDat_tsne$Y),aes(x=tSNE1,y=tSNE2), shape=1) + geom_point(aes(size=impressions_sc_smooth[,1],color=fromOneHot(scLab)),alpha=1/2) + scale_size(range = c(1, 5))
+plot(p+labs(size='AD association',color='Cell type') + theme(legend.title=element_text(size=rel(1)),legend.text=element_text(size=rel(1)),axis.title=element_text(size=rel(1)),axis.text.x=element_text(size=rel(1)),axis.text.y=element_text(size=rel(1))))
+
+```
+
+# Displaying patients overlaid with neuron and microglia impressions
+```{r}
+impressions_pat = quantNorm(patscPreds)
+patDat_tsne = Rtsne(patDat)
+colnames(patDat_tsne$Y) = c('tSNE1','tSNE2')
+impressions_pat_smooth = knnSmooth(impressions_pat,patDat_tsne$Y)
+colnames(patLab) = c("AD","normal")
+p = ggplot(as.data.frame(patDat_tsne$Y),aes(x=tSNE1,y=tSNE2)) + geom_point(aes(size=impressions_pat_smooth[,'Neu'],color=fromOneHot(patLab)),alpha=1/2)+labs(size='Neuron\nenrichment',color='AD status') + scale_size(range = c(0, 5))
+p_marg = ggMarginal(p + theme(legend.title=element_text(size=rel(1)),legend.text=element_text(size=rel(1)),axis.title=element_text(size=rel(1)),axis.text.x=element_text(size=rel(1)),axis.text.y=element_text(size=rel(1))),groupColour=TRUE, groupFill=TRUE)
+grid.newpage()
+grid.draw(p_marg)
+p = ggplot(as.data.frame(patDat_tsne$Y),aes(x=tSNE1,y=tSNE2)) + geom_point(aes(size=impressions_pat_smooth[,'Micro'],color=fromOneHot(patLab)),alpha=1/2)+labs(size='Microglia\nenrichment',color='AD status') + scale_size(range = c(0, 5))
+p_marg = ggMarginal(p + theme(legend.title=element_text(size=rel(1)),legend.text=element_text(size=rel(1)),axis.title=element_text(size=rel(1)),axis.text.x=element_text(size=rel(1)),axis.text.y=element_text(size=rel(1))),groupColour=TRUE, groupFill=TRUE)
+grid.newpage()
+grid.draw(p_marg)
+```
+
+
+
+
+
+
+
+
+
+
