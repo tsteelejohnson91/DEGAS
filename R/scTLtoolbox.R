@@ -365,6 +365,15 @@ runCCMTL <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FF
   return(ccModel1)
 }
 
+# Bootstrap aggregation wrapper for model training
+runCCMTLBag <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FFdepth,Bagdepth){
+  out <- list()
+  for(i in 1:Bagdepth){
+    out[[i]] <- runCCMTL(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FFdepth)
+  }
+  return(out)
+}
+
 # Make predictions based on a trained DEGAS model
 predClass <- function(ccModel1,Exp,scORpat){
   if(ccModel1@Architecture=="DenseNet"){
@@ -436,13 +445,7 @@ predClass2 <- function(ccModel1,Exp,scORpat){
   return(eval(parse(text=calcPred)))
 }
 
-runCCMTLBag <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FFdepth,Bagdepth){
-  out <- list()
-  for(i in 1:Bagdepth){
-    out[[i]] <- runCCMTL(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FFdepth)
-  }
-  return(out)
-}
+# Predict from bootstrap aggregated models
 predClassBag <- function(ccModel,Exp,scORpat){
   out = list()
   for(i in 1:length(ccModel)){
@@ -451,7 +454,7 @@ predClassBag <- function(ccModel,Exp,scORpat){
   out = Reduce("+", out) / length(out)
   return(out)
 }
-              
+  
 # Predict patient class from proportions of single cell classes
 predPatClassFromSCClass <- function(ccModel1,Exp){
   Z1 = sigmoid(sweep((Exp %*% ccModel4@Theta4),2,ccModel1@Bias4,'+'))
