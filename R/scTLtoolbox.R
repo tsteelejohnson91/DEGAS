@@ -436,6 +436,22 @@ predClass2 <- function(ccModel1,Exp,scORpat){
   return(eval(parse(text=calcPred)))
 }
 
+runCCMTLBag <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FFdepth,Bagdepth){
+  out <- list()
+  for(i in 1:Bagdepth){
+    out[[i]] <- runCCMTL(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FFdepth)
+  }
+  return(out)
+}
+predClassBag <- function(ccModel,Exp,scORpat){
+  out = list()
+  for(i in 1:length(ccModel)){
+    out[[i]] <- predClass(ccModel[[i]],Exp,scORpat)
+  }
+  out = Reduce("+", out) / length(out)
+  return(out)
+}
+              
 # Predict patient class from proportions of single cell classes
 predPatClassFromSCClass <- function(ccModel1,Exp){
   Z1 = sigmoid(sweep((Exp %*% ccModel4@Theta4),2,ccModel1@Bias4,'+'))
