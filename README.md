@@ -7,7 +7,7 @@
 ## Installation
 * Step 1 Install python3, pip3, and Tensorflow
 ```bash
-pip3 install tensorflow==1.4
+pip3 install tensorflow
 ```
 
 * Step 2 Install devtools
