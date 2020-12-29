@@ -11,6 +11,7 @@ import math							#NEED
 #from sklearn import preprocessing
 #import scipy.io as sio
 #from os import listdir
+#from scipy.stats import zscore
 import os							#NEED
 import sys							#NEED
 from os.path import isfile, join	#NEED
@@ -245,9 +246,9 @@ def resample_mixGamma(X,Y,train,nsamp,depth):
         else:
             choice = np.random.choice(train[idx[i]],int(samp_per_class),replace=False)
         add = add + choice.tolist()
-    tmpX = np.zeros([nsamp,X.shape[1]])
-    tmpY = np.zeros([nsamp,Y.shape[1]])
-    for i in range(nsamp):
+    tmpX = np.zeros([nsamp,X.shape[1]])   # CHANGED 20201222
+    tmpY = np.zeros([nsamp,Y.shape[1]])   # CHANGED 20201222
+    for i in range(nsamp):                # CHANGED 20201222
         percBinom = np.random.gamma(shape=1,size=len(colsums))
         percBinom = percBinom/sum(percBinom)
         intBinom = np.round(percBinom*depth)
@@ -257,9 +258,13 @@ def resample_mixGamma(X,Y,train,nsamp,depth):
                 tmpIdx = tmpIdx + np.random.choice(train[idx[j]], int(intBinom[j]),replace=True).tolist()
             else:
                 tmpIdx = tmpIdx + np.random.choice(train[idx[j]], int(intBinom[j]),replace=False).tolist()
-        tmpX[i,:] = np.mean(X[tmpIdx,:],axis=0)
+        tmpX[i,:] = np.mean(X[tmpIdx,:],axis=0)+1e-3
         tmpY[i,:] = intBinom/sum(intBinom)
-    return(np.concatenate((X[add,:],tmpX), axis=0),np.concatenate((Y[add,:],tmpY)))
+    #scaler = preprocessing.MinMaxScaler()        # CHANGED 20201213
+    #tmpX = np.transpose(scaler.fit_transform(np.transpose(zscore(tmpX,axis=0))))     # CHANGED 20201212
+    #return(tmpX,tmpY)		#CHANGED 20201211
+    return(np.concatenate((X[add,:],tmpX), axis=0),np.concatenate((Y[add,:],tmpY)))		#CHANGED 20201211
+    #return(np.concatenate((X[add[1:np.round(nsamp/2)],:],tmpX), axis=0),np.concatenate((Y[add[1:np.round(nsamp/2)],:],tmpY)))		#CHANGED 20201211)
 
 def intersect(lst1,lst2):
 	return(list(set(lst1) & set(lst2)))

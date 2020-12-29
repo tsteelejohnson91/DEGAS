@@ -255,9 +255,12 @@ def resample_mixGamma(X,Y,train,nsamp,depth):
                 tmpIdx = tmpIdx + np.random.choice(train[idx[j]], int(intBinom[j]),replace=True).tolist()
             else:
                 tmpIdx = tmpIdx + np.random.choice(train[idx[j]], int(intBinom[j]),replace=False).tolist()
-        tmpX[i,:] = np.mean(X[tmpIdx,:],axis=0)
+        tmpX[i,:] = np.mean(X[tmpIdx,:],axis=0)+1e-3
         tmpY[i,:] = intBinom/sum(intBinom)
-    return(np.concatenate((X[add,:],tmpX), axis=0),np.concatenate((Y[add,:],tmpY)))
+    #scaler = preprocessing.MinMaxScaler()        # CHANGED 20201213
+    #tmpX = np.transpose(scaler.fit_transform(np.transpose(zscore(tmpX,axis=0))))     # CHANGED 20201212
+    #return(tmpX,tmpY)		#CHANGED 20201211
+    return(np.concatenate((X[add,:],tmpX), axis=0),np.concatenate((Y[add,:],tmpY)))		#CHANGED 20201211
 
 def intersect(lst1,lst2):
 	return(list(set(lst1) & set(lst2)))
