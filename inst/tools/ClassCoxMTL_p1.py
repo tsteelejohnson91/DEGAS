@@ -232,6 +232,40 @@ def resample(prc_cut,Y,train):
 def resample_under():
 	train = np.squeeze(train)
 	
+#*******TESTING BELOW!!!!********************
+def resample_mixGamma(X,Y,train,nsamp,depth):
+    add = list()
+    train = np.squeeze(train)
+    colsums = np.sum(Y[train,:],axis=0)
+    samp_per_class = round(nsamp/len(colsums))
+    idx = list()
+    for i in range(len(colsums)):
+        idx = idx + [np.squeeze(np.where(Y[train,i]>=1)).tolist()];
+        if samp_per_class > colsums[i]:
+            choice = np.random.choice(train[idx[i]],int(samp_per_class),replace=True)
+        else:
+            choice = np.random.choice(train[idx[i]],int(samp_per_class),replace=False)
+        add = add + choice.tolist()
+    tmpX = np.zeros([nsamp,X.shape[1]])   # CHANGED 20201222
+    tmpY = np.zeros([nsamp,Y.shape[1]])   # CHANGED 20201222
+    for i in range(nsamp):                # CHANGED 20201222
+        percBinom = np.random.gamma(shape=1,size=len(colsums))
+        percBinom = percBinom/sum(percBinom)
+        intBinom = np.round(percBinom*depth)
+        tmpIdx = list()
+        for j in range(len(colsums)):
+            if int(intBinom[j]) > colsums[j]:
+                tmpIdx = tmpIdx + np.random.choice(train[idx[j]], int(intBinom[j]),replace=True).tolist()
+            else:
+                tmpIdx = tmpIdx + np.random.choice(train[idx[j]], int(intBinom[j]),replace=False).tolist()
+        tmpX[i,:] = np.mean(X[tmpIdx,:],axis=0)+1e-3
+        tmpY[i,:] = intBinom/sum(intBinom)
+    #scaler = preprocessing.MinMaxScaler()        # CHANGED 20201213
+    #tmpX = np.transpose(scaler.fit_transform(np.transpose(zscore(tmpX,axis=0))))     # CHANGED 20201212
+    #return(tmpX,tmpY)		#CHANGED 20201211
+    return(np.concatenate((X[add,:],tmpX), axis=0),np.concatenate((Y[add,:],tmpY)))		#CHANGED 20201211
+    #return(np.concatenate((X[add[1:np.round(nsamp/2)],:],tmpX), axis=0),np.concatenate((Y[add[1:np.round(nsamp/2)],:],tmpY)))		#CHANGED 20201211)
+
 
 def intersect(lst1,lst2):
 	return(list(set(lst1) & set(lst2)))
