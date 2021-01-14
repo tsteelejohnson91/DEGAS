@@ -36,7 +36,7 @@ def gaussian_kernel_matrix(x, y, sigmas):
 # Add weights to hidden layer
 def get_weight(shape, lambda1): 
 	var = tf.Variable(tf.random_normal(shape), dtype=tf.float32)
-	if tf.__version__[0]==1:
+	if tf.__version__[0]=='1':
 		tf.add_to_collection('losses', tf.contrib.layers.l2_regularizer(lambda1)(var))
 	else:
 		tf.add_to_collection('losses', tf.keras.regularizers.L2(lambda1)(var))  
