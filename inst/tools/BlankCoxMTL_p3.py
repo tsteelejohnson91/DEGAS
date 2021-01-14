@@ -7,8 +7,9 @@ predict_pat=add_layer(layerF,hidden_feats,Lpat,activation_function=tf.sigmoid,dr
 #lossLabel1 = tf.reduce_mean(tf.reduce_sum(tf.square(ys_sc-tf.slice(predict_sc,[0,0],[lsc,Lsc])),reduction_indices=[1]))				# FIX HERE
 lossLabel2 = -tf.reduce_mean((tf.squeeze(tf.slice(predict_pat,[lsc,0],[lpat,Lpat])) - tf.log(tf.reduce_sum(tf.exp(tf.squeeze(tf.slice(predict_pat,[lsc,0],[lpat,Lpat]))) * r_pat, 1))) * c_pat)		# FIX HERE
 lossMMD = mmd_loss(tf.slice(layerF,[0,0],[lsc,hidden_feats]),tf.slice(layerF,[lsc,0],[lpat,hidden_feats]))
+lossConstSCtoPT = tf.reduce_mean(tf.reduce_sum(tf.square(tf.slice(predict_pat,[0,0],[lsc,Lpat])-(1.0/2.0)),reduction_indices=[1]))
 #*************Use below cost functions**********************
-loss = 2*lossLabel2 +lambda3*lossMMD
+loss = 2*lossLabel2 +lambda3*lossMMD + lossConstSCtoPT
 #lossae_sc2pat = tf.reduce_mean(tf.reduce_sum(tf.square(ps-predictae_sc2pat),reduction_indices=[1]))
 train_step1 = tf.train.AdamOptimizer(learning_rate=0.01,epsilon=1e-3).minimize(loss)
 #train_step2 = tf.train.AdamOptimizer(learning_rate=0.01,epsilon=1e-3).minimize(lossae_sc2pat)
