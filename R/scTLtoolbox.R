@@ -595,4 +595,10 @@ evenSamp <- function(s,g,n){
   return(out)
 }
 
-
+# Convert DEGAS output [0,1] to an association [-1,1]
+toCorrCoeff <- function(probs){
+  k=dim(probs)[2]
+  if(k<2 || is.null(k)){k=2}
+  l=2
+  return(2*((probs-1/k)/(l-l/k) + 1/l)-1)
+}
