@@ -9,7 +9,7 @@ lossLabel2 = -tf.reduce_mean((tf.squeeze(tf.slice(predict_pat,[lsc,0],[lpat,Lpat
 lossMMD = mmd_loss(tf.slice(layerF,[0,0],[lsc,hidden_feats]),tf.slice(layerF,[lsc,0],[lpat,hidden_feats]))
 lossConstSCtoPT = tf.reduce_mean(tf.reduce_sum(tf.square(tf.slice(predict_pat,[0,0],[lsc,Lpat])-(1.0/2.0)),reduction_indices=[1]))  #TESTING
 lossConstPTtoSC = tf.reduce_mean(tf.reduce_sum(tf.square(tf.slice(predict_sc,[lsc,0],[lpat,Lsc])-(1.0/Lsc)),reduction_indices=[1]))  #TESTING
-lossConstPTtoPT = tf.reduce_mean(tf.reduce_sum(tf.square(tf.slice(predict_pat,lsc,0],[lpat,Lsc])-(1.0/2.0)),reduction_indices=[1])) 
+lossConstPTtoPT = tf.reduce_mean(tf.reduce_sum(tf.square(tf.slice(predict_pat,[lsc,0],[lpat,Lsc])-(1.0/2.0)),reduction_indices=[1])) 
 #*************Use below cost functions**********************
 loss = 2*lossLabel1 + lambda2*lossLabel2 +lambda3*lossMMD + lossConstSCtoPT + lossConstPTtoSC + lossConstPTtoPT
 lossae_sc2pat = tf.reduce_mean(tf.reduce_sum(tf.square(ps-predictae_sc2pat),reduction_indices=[1]))
