@@ -22,6 +22,8 @@ train_step1 = tf.train.AdamOptimizer(learning_rate=0.01,epsilon=1e-3).minimize(l
 #np.random.shuffle(train_sc)				# CHANGED 20201211
 train_pat = resample(50,Ypat,idx_pat)		# CHANGED
 np.random.shuffle(train_pat)				# CHANGED 20201211
+while np.sum(np.sum(Y[train_pat[0:patbatch_sz],:],axis=0)==0)>0:
+	np.random.shuffle(train_pat)
 train_sc2 = idx_sc[0:scbatch_sz]			# CHANGED
 train_pat2 = train_pat[0:patbatch_sz]		# CHANGED
 resampleGammaXYpat = resample_mixGamma(np.squeeze(Xpat[train_pat2,:]),np.squeeze(Ypat[train_pat2,:]),list(range(patbatch_sz)),patbatch_sz,Lpat)       # CHANGED 20201217
@@ -44,6 +46,8 @@ for i in range(train_steps+1):
 		#train_sc = resample(50,Ysc,idx_sc)			# CHANGED
 		train_pat = resample(50,Ypat,idx_pat)		# CHANGED
 		np.random.shuffle(train_pat)				# CHANGED
+		while np.sum(np.sum(Y[train_pat[0:patbatch_sz],:],axis=0)==0)>0:
+			np.random.shuffle(train_pat)
 		np.random.shuffle(idx_sc)					# CHANGED
 		train_pat2 = train_pat[0:patbatch_sz]		# CHANGED 20201211
 		train_sc2 = idx_sc[0:scbatch_sz]			# CHANGED 20201211
