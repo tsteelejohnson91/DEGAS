@@ -25,7 +25,7 @@ train_sc2 = train_sc[0:scbatch_sz]			# CHANGED
 train_pat2 = train_pat[0:patbatch_sz]		# CHANGED
 resampleGammaXYpat = resample_mixGamma(np.squeeze(Xpat[train_pat2,:]),np.squeeze(Ypat[train_pat2,:]),list(range(patbatch_sz)),patbatch_sz,Lpat)       # CHANGED 20201217
 resampleGammaXYsc = resample_mixGamma(np.squeeze(Xsc[train_sc2,:]),np.squeeze(Ysc[train_sc2,:]),list(range(scbatch_sz)),scbatch_sz,Lsc)       # CHANGED 20201217
-tensor_train = {xs: np.concatenate([resampleGammaXYsc[0],resampleGammaXYpat[0]]), ys_sc: resampleGammaXYsc[1], ys_pat: resampleGammaXYpat[1], lsc: resampleGammaXYsc[1].shape[0], lpat: resampleGammaXYpat.shape[0], kprob: do_prc}
+tensor_train = {xs: np.concatenate([resampleGammaXYsc[0],resampleGammaXYpat[0]]), ys_sc: resampleGammaXYsc[1], ys_pat: resampleGammaXYpat[1], lsc: resampleGammaXYsc[1].shape[0], lpat: resampleGammaXYpat[1].shape[0], kprob: do_prc}
 init=tf.global_variables_initializer()
 #***********************************************************************
 # training model
@@ -47,4 +47,4 @@ for i in range(train_steps+1):
 		train_pat2 = train_pat[0:patbatch_sz]		# CHANGED
 		resampleGammaXYpat = resample_mixGamma(np.squeeze(Xpat[train_pat2,:]),np.squeeze(Ypat[train_pat2,:]),list(range(patbatch_sz)),patbatch_sz,Lpat)       # CHANGED 20201217
 		resampleGammaXYsc = resample_mixGamma(np.squeeze(Xsc[train_sc2,:]),np.squeeze(Ysc[train_sc2,:]),list(range(scbatch_sz)),scbatch_sz,Lsc)       # CHANGED 20201217
-		tensor_train = {xs: np.concatenate([resampleGammaXYsc[0],resampleGammaXYpat[0]]), ys_sc: resampleGammaXYsc[1], ys_pat: resampleGammaXYpat[1], lsc: resampleGammaXYsc[1].shape[0],pat: resampleGammaXYpat.shape[0], kprob: do_prc}
+		tensor_train = {xs: np.concatenate([resampleGammaXYsc[0],resampleGammaXYpat[0]]), ys_sc: resampleGammaXYsc[1], ys_pat: resampleGammaXYpat[1], lsc: resampleGammaXYsc[1].shape[0], lpat: resampleGammaXYpat[1].shape[0], kprob: do_prc}
