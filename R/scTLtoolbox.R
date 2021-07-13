@@ -189,7 +189,6 @@ readOutputFiles <- function(tmpDir,Model_type,architecture){
 
 # Make python executable for standard (feedforward) implementation
 makeExec <- function(tmpDir,FFdepth,model_type){
-  message(paste0(as.character(FFdepth),"-layer ",model_type))
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
@@ -260,7 +259,6 @@ makeExec <- function(tmpDir,FFdepth,model_type){
 
 # Make python executable for densenet implementation
 makeExec2 <- function(tmpDir,FFdepth,model_type){
-  message(paste0(as.character(FFdepth),"-layer ",model_type))
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
@@ -353,6 +351,7 @@ runCCMTL <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FF
   system('pwd')
   system(paste0('rm -rf ',tmpDir))
   system(paste0('mkdir ',tmpDir))
+  message(paste0(as.character(FFdepth), "-layer ", architecture, " ",model_type, " DEGAS model"))
   if(architecture=="DenseNet"){
     makeExec2(tmpDir, FFdepth, model_type)
   }else if(architecture=="Standard"){
