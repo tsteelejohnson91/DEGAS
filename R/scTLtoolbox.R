@@ -189,6 +189,7 @@ readOutputFiles <- function(tmpDir,Model_type,architecture){
 
 # Make python executable for standard (feedforward) implementation
 makeExec <- function(tmpDir,FFdepth,model_type){
+  message(paste0(as.character(FFdepth),"-layer ",model_type))
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
@@ -259,6 +260,7 @@ makeExec <- function(tmpDir,FFdepth,model_type){
 
 # Make python executable for densenet implementation
 makeExec2 <- function(tmpDir,FFdepth,model_type){
+  message(paste0(as.character(FFdepth),"-layer ",model_type))
   if (model_type != 'ClassClass' && model_type != 'ClassCox' && model_type != 'ClassBlank' && model_type != 'BlankClass' && model_type!='BlankCox'){
     stop("Please specify either 'BlankClass', 'ClassBlank', 'BlankCox', ClassClass' or 'ClassCox' for the model_type")
   }
