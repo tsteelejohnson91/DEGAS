@@ -281,7 +281,7 @@ def rank(inputdat, axis=-1):
 data_folder = sys.argv[1]
 Xsc = np.loadtxt(data_folder+'scExp.csv',delimiter=',',skiprows=1)
 #Ysc = np.loadtxt(data_folder+'scLab.csv',delimiter=',',skiprows=1)
-Nsc = Ysc.shape[0]
+Nsc = Xsc.shape[0]
 Fsc = Xsc.shape[1]
 #Lsc = Ysc.shape[1]
 idx_sc = np.arange(Nsc)
@@ -289,7 +289,7 @@ np.random.shuffle(idx_sc)
 
 Xpat = np.loadtxt(data_folder+'patExp.csv',delimiter=',',skiprows=1)
 Ypat = np.loadtxt(data_folder+'patLab.csv',delimiter=',',skiprows=1)
-Npat = Ypat.shape[0]
+Npat = Xpat.shape[0]
 Fpat = Xpat.shape[1]
 Lpat = 1					# Lpat is 1 bc it is a proportional hazards model
 idx_pat = np.arange(Npat)
