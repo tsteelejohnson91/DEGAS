@@ -325,7 +325,7 @@ makeExec2 <- function(tmpDir,FFdepth,model_type){
     outlines[length(outlines)+1] = "    f.write('sigmoid\\n')"
   }
   outlines[length(outlines)+1] = "    f.write('softmax\\n')"
-  if (model_type == 'ClassBlank' || model_type == 'BlankClass'){
+  if (model_type == 'ClassBlank' || model_type == 'BlankClass' || model_type == 'BlankCox'){
     #outlines[length(outlines)+1] = "    f.write('softmax\\n')"
   }else{
     if (model_type == 'ClassClass'){
