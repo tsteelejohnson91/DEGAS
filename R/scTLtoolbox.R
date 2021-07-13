@@ -390,7 +390,7 @@ predClass <- function(ccModel1,Exp,scORpat){
 predClass1 <- function(ccModel1,Exp,scORpat){
   Z = Exp
   rm(Exp)
-  if (ccModel1@Model_type=='BlankClass' || ccModel1@Model_type=='ClassBlank'){
+  if (ccModel1@Model_type=='BlankClass' || ccModel1@Model_type=='ClassBlank' || ccModel1@Model_type=='ClassBlank'){
     for (i in 1:(ccModel1@Depth)){
       calcZ = paste0(ccModel1@Activation[[i]],"(sweep((as.matrix(Z) %*% ccModel1@Theta[[",as.character(i),"]]),2,ccModel1@Bias[[",as.character(i),"]],'+'))")
       Z = eval(parse(text=calcZ))
@@ -416,7 +416,7 @@ predClass1 <- function(ccModel1,Exp,scORpat){
 predClass2 <- function(ccModel1,Exp,scORpat){
   Z = Exp
   rm(Exp)
-  if (ccModel1@Model_type=='BlankClass' || ccModel1@Model_type=='ClassBlank'){
+  if (ccModel1@Model_type=='BlankClass' || ccModel1@Model_type=='ClassBlank' || ccModel1@Model_type=='BlankCox'){
     for (i in 1:(ccModel1@Depth)){
       calcZ = paste0(ccModel1@Activation[[i]],"(sweep((as.matrix(Z) %*% ccModel1@Theta[[",as.character(i),"]]),2,ccModel1@Bias[[",as.character(i),"]],'+'))")
       if(i<ccModel1@Depth-1){
