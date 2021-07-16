@@ -35,3 +35,13 @@ install_github("tsteelejohnson91/DEGAS")
 
 ### R
 * None required
+
+## Configurations tested
+
+### Mac CPU
+* R (4.0.1), Python (3.8.2), TensorFlow (2.3.1)
+* R (4.1.0), Python (3.8.3), TensorFlow (2.5.0)
+* R (3.5.1), Python (3.6.0), TensorFlow (2.3.1)
+
+### Linux GPU
+* R (), Python (), TensorFlow GPU-enabled ()
