@@ -44,4 +44,4 @@ install_github("tsteelejohnson91/DEGAS")
 * R (3.5.1), Python (3.6.0), TensorFlow (2.3.1)
 
 ### Linux GPU
-* R (), Python (), TensorFlow GPU-enabled ()
+* R (3.4.4), Python (anaconda 3.6.5), TensorFlow GPU-enabled (1.9.0)
