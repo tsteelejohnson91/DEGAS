@@ -5,16 +5,16 @@
 ![DEGAS](figures/DEGAS.png "DEGAS")
 
 ## Installation
-* Step 1 Install python3, pip3, and Tensorflow
+* Step 1 Install python3, pip3, and Tensorflow from terminal
 ```bash
 pip3 install tensorflow
 ```
 
-* Step 2 Install devtools
+* Step 2 Install devtools in R
 ```R
 install.packages("devtools")
 ```
-* Step 3 Install DEGAS
+* Step 3 Install DEGAS in R
 ```R
 library(devtools)
 install_github("tsteelejohnson91/DEGAS")
