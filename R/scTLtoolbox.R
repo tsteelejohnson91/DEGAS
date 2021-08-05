@@ -104,7 +104,7 @@ setClass("ccModel",slots=list(Bias="list",Theta="list",Activation="list",
 normFunc <- function(x){return((x-mean(x, na.rm = T))/(sd(x, na.rm = T)+1e-3))}
 
 # scaling from 0-1
-scaleFunc <- function(x){return((x- min(x)) /(max(x)-min(x)+1e-3))}
+scaleFunc <- function(x){return((x- min(x, na.rm = T)) /(max(x, na.rm = T)-min(x, na.rm = T)+1e-3))}
 
 # center to 0
 centerFunc <- function(x){return(x-mean(x,na.rm=T))}
