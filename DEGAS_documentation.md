@@ -1,13 +1,15 @@
-1) Preprocessing
+# DEGAS Function Documentation
 
-normFunc( x )
-Inputs
+## 1) Preprocessing
+
+**normFunc( x )**
+**Inputs**
 x: A vector of numbers to convert to z-scores. Generally each cell or patient sample would use this conversion in the DEGAS workflow.
-Output
+**Output**
 A vector of z-scores based on the original numeric vector
 
-scaleFunc( x )
-Inputs
+**scaleFunc( x )**
+**Inputs**
 x: A vector of number to scale to [0,1]. Generally each cell or patient sample would use this conversion after conversion to z-scores using normFunc.
 Output
 A vector of [0,1] scaled values
