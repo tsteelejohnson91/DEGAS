@@ -15,16 +15,20 @@ pip3 install functools
 pip3 install numpy
 pip3 install math
 ```
-* Step 2 Install devtools in R
+* Step 3 Install devtools in R
 ```R
 install.packages("devtools")
 ```
-* Step 3 Install DEGAS in R
+* Step 4 Install DEGAS in R
 ```R
 library(devtools)
 install_github("tsteelejohnson91/DEGAS")
 ```
-
+* Step 5 Install packages useful for downstream analysis in R
+```R
+install.packages("Rtsne")
+install.packages("ggplot2")
+```
 ## Prerequisites
 
 ### OS
