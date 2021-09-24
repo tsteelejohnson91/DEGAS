@@ -55,11 +55,14 @@ install.packages("ggplot2")
 ### Linux GPU
 * R (3.4.4), Python (anaconda 3.6.5), TensorFlow GPU-enabled (1.9.0)
 
-### Package Versions
+### R Package Versions
 * See Session Info in the Simulation, GBM, AD, and MM examples for version details
 * I.e. See bottom of https://github.com/tsteelejohnson91/DEGAS/blob/master/MM_example/MM_example.md
 
-## DEGAS Documentation and examples
+### Python package versions
+* Coming soon
+
+## DEGAS documentation and examples
 * Documentation (https://github.com/tsteelejohnson91/DEGAS/blob/master/DEGAS_documentation.md)
 * Simulation example (Coming soon)
 * GMB example (Coming soon)
