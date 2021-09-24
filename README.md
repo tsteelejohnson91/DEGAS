@@ -57,7 +57,7 @@ install.packages("ggplot2")
 
 ### R Package Versions
 * See Session Info in the Simulation, GBM, AD, and MM examples for version details
-* I.e. See bottom of https://github.com/tsteelejohnson91/DEGAS/blob/master/MM_example/MM_example.md
+* e.g. See bottom of https://github.com/tsteelejohnson91/DEGAS/blob/master/MM_example/MM_example.md
 
 ### Python package versions
 * Coming soon
