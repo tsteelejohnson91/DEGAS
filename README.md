@@ -34,7 +34,6 @@ install.packages("ggplot2")
 ### OS
 * OSX
 * Linux
-* Windows (coming soon)
 
 ### Python packages
 * tensorflow
