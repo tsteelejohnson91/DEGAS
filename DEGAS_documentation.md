@@ -4,23 +4,23 @@
 
 **normFunc( x )**<br>
 **Inputs**<br>
-x: A vector of numbers to convert to z-scores. Generally each cell or patient sample would use this conversion in the DEGAS workflow.<br>
+**x:** A vector of numbers to convert to z-scores. Generally each cell or patient sample would use this conversion in the DEGAS workflow.<br>
 **Output**<br>
 A vector of z-scores based on the original numeric vector<br>
-
-**scaleFunc( x )**
-**Inputs**
-x: A vector of number to scale to [0,1]. Generally each cell or patient sample would use this conversion after conversion to z-scores using normFunc.
-Output
-A vector of [0,1] scaled values
-
-initDEGAS()
-This function must be run to initialize the DEGAS parameters before training the model. The following functions can be used to change the initialized DEGAS parameters to the user’s preference.
-Inputs
-None
-Output
-None
-
+<br>
+**scaleFunc( x )**<br>
+**Inputs**<br>
+**x:** A vector of number to scale to [0,1]. Generally each cell or patient sample would use this conversion after conversion to z-scores using normFunc.<br>
+**Output**<br>
+A vector of [0,1] scaled values<br>
+<br>
+**initDEGAS()**<br>
+This function must be run to initialize the DEGAS parameters before training the model. The following functions can be used to change the initialized DEGAS parameters to the user’s preference.<br>
+**Inputs**<br>
+None<br>
+**Output**<br>
+None<br>
+<br>
 setPython( path2python )
 Inputs
 path2python: A string containing the path to the location of the preferred python executable. This is important if the tensorflow package is only available for a specific version of python on the user’s computer.
