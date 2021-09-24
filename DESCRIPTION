@@ -6,7 +6,7 @@ Version: 0.1.0
 Author: c(person("Travis", "Johnson", email = "johnstrs@iu.edu", role = c("aut", "cre")),
              person("Zhi", "Huang", email = "huang898@purdue.edu", role = c("aut", "cre"))
              )
-Maintainer: Zhi Huang <huang898@purdue.edu>
+Maintainer: Travis Johnson <johnstrs@iu.edu>
 Description: DEGAS: A transfer learning framework to infer impressions of cellular and patient phenotypes between patients and single cells.
 License: MIT
 Encoding: UTF-8
