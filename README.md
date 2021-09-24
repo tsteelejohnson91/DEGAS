@@ -34,7 +34,8 @@ install_github("tsteelejohnson91/DEGAS")
 * math
 
 ### R
-* None required
+* Rtsne
+* ggplot2
 
 ## Configurations tested
 
