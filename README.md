@@ -6,8 +6,8 @@
 
 ## Installation
 * Step 1 Install python3 and pip3 if not previously installed 
-** https://wiki.python.org/moin/BeginnersGuide/Download
-** https://www.python.org/downloads/
+  * https://wiki.python.org/moin/BeginnersGuide/Download
+  * https://www.python.org/downloads/
 * Step 2 Install python packages from terminal
 ```bash
 pip3 install tensorflow
