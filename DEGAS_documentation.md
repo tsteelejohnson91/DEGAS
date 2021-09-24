@@ -21,64 +21,61 @@ None<br>
 **Output**<br>
 None<br>
 <br>
-setPython( path2python )
-Inputs
-path2python: A string containing the path to the location of the preferred python executable. This is important if the tensorflow package is only available for a specific version of python on the user’s computer.
-Output
-None
+**setPython( path2python )**<br>
+**Inputs**<br>
+**path2python:** A string containing the path to the location of the preferred python executable. This is important if the tensorflow package is only available for a specific version of python on the user’s computer.<br>
+**Output**<br>
+None<br>
+<br>
+**set_training_steps( inp )**<br>
+**Inputs**<br>
+**inp:** The number of training steps during DEGAS model training.<br>
+**Output**<br>
+None<br>
+<br>
+**set_single_cell_batch_size( inp )**<br>
+**Inputs**<br>
+**inp:** The number of cells to use in the minibatch<br>
+**Output**<br>
+None<br>
+<br>
+**set_patient_batch_size( inp )**<br>
+**Inputs**<br>
+**inp:** The number of patients to use in the minibatch<br>
+**Output**<br>
+None<br>
+<br>
+**set_hidden_feature_number( inp )**<br>
+**Inputs**<br>
+**inp:** The number of features in each hidden layer of the DEGAS model.<br>
+**Output**<br>
+None<br>
+<br>
+**set_dropout_keep_fraction( inp )**<br>
+**Inputs**<br>
+**inp:** The percentage of nodes to keep during dropout.<br>
+**Output**<br>
+None<br>
+<br>
+**set_l2_regularization_term( inp )**<br>
+**Inputs**<br>
+**inp:** The regularization term weight lambda for L2 regularization.<br>
+**Output**<br>
+None<br>
+<br>
+**set_patient_loss_term( inp )**<br>
+**Inputs**<br>
+**inp:** The term weight lambda for the patient label loss.<br>
+**Output**<br>
+None<br>
 
-set_training_steps( inp )
-Inputs
-inp: The number of training steps during DEGAS model training.
-Output
-None
+**set_MMD_loss_term( inp )**<br>
+**Inputs**<br>
+**inp:** The term weight lambda for the MMD loss.<br>
+**Output**<br>
+None<br>
 
-
-set_single_cell_batch_size( inp )
-Inputs
-inp: The number of cells to use in the minibatch
-Output
-None
-
-set_patient_batch_size( inp )
-Inputs
-inp: The number of patients to use in the minibatch
-Output
-None
-
-
-set_hidden_feature_number( inp )
-Inputs
-inp: The number of features in each hidden layer of the DEGAS model.
-Output
-None
-
-set_dropout_keep_fraction( inp )
-Inputs
-inp: The percentage of nodes to keep during dropout.
-Output
-None
-
-set_l2_regularization_term( inp )
-Inputs
-inp: The regularization term weight lambda for L2 regularization.
-Output
-None
-
-set_patient_loss_term( inp )
-Inputs
-inp: The term weight lambda for the patient label loss.
-Output
-None
-
-set_MMD_loss_term( inp )
-Inputs
-inp: The term weight lambda for the MMD loss.
-Output
-None
-
-
-2) Model training and prediction
+## 2) Model training and prediction
 
 runCCMTLBag( scExp, scLab, patExp, patLab, tmpDir, model_type, architecture, FFdepth, Bagdepth )
 Inputs
