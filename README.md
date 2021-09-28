@@ -48,19 +48,22 @@ install.packages("ggplot2")
 ## Configurations tested
 
 ### Mac CPU
-* R (4.0.1), Python (3.8.2), TensorFlow (2.3.1)
-* R (4.1.0), Python (3.8.3), TensorFlow (2.5.0)
-* R (3.5.1), Python (3.6.0), TensorFlow (2.3.1)
+* R (4.0.1), Python (3.8.2), TensorFlow (2.3.1), NumPy (1.18.5), functools (3.8.2), math (3.8.2)
+* R (4.1.0), Python (3.8.3), TensorFlow (2.5.0), NumPy (), functools (3.8.3), math (3.8.3)
+* R (3.5.1), Python (3.6.0), TensorFlow (2.3.1), NumPy (1.17.4), functools (3.6.0), math (3.6.0)
 
 ### Linux GPU
-* R (3.4.4), Python (anaconda 3.6.5), TensorFlow GPU-enabled (1.9.0)
+* R (3.4.4), Python (anaconda 3.6.5), TensorFlow GPU-enabled (1.9.0), NumPy (1.14.3), functools (anaconda 3.6.5), math (anaconda 3.6.5)
 
 ### R Package Versions
 * See Session Info in the Simulation, GBM, AD, and MM examples for version details
 * e.g. See bottom of https://github.com/tsteelejohnson91/DEGAS/blob/master/MM_example/MM_example.md
 
 ### Python package versions
-* Coming soon
+* TensorFlow: 2.3.1, 2.5.0, 2.3.1, 1.9.0 (GPU)
+* Numpy: 1.18.5, , 1.17.4, 1.14.3
+* functools: 3.8.2, 3.8.3, 3.6.0, anaconda 3.6.5 (GPU)
+* math: 3.8.2, 3.8.3, 3.6.0, anaconda 3.6.5 (GPU)
 
 ## DEGAS documentation and examples
 * Documentation (https://github.com/tsteelejohnson91/DEGAS/blob/master/DEGAS_documentation.md)
