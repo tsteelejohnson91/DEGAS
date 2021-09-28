@@ -49,7 +49,7 @@ install.packages("ggplot2")
 
 ### Mac CPU
 * R (4.0.1), Python (3.8.2), TensorFlow (2.3.1), NumPy (1.18.5), functools (3.8.2), math (3.8.2)
-* R (4.1.0), Python (3.8.3), TensorFlow (2.5.0), NumPy (), functools (3.8.3), math (3.8.3)
+* R (4.1.0), Python (3.8.3), TensorFlow (2.5.0), NumPy (1.19.5), functools (3.8.3), math (3.8.3)
 * R (3.5.1), Python (3.6.0), TensorFlow (2.3.1), NumPy (1.17.4), functools (3.6.0), math (3.6.0)
 
 ### Linux GPU
@@ -61,7 +61,7 @@ install.packages("ggplot2")
 
 ### Python package versions
 * TensorFlow: 2.3.1, 2.5.0, 2.3.1, 1.9.0 (GPU)
-* Numpy: 1.18.5, , 1.17.4, 1.14.3
+* Numpy: 1.18.5, 1.19.5, 1.17.4, 1.14.3
 * functools: 3.8.2, 3.8.3, 3.6.0, anaconda 3.6.5
 * math: 3.8.2, 3.8.3, 3.6.0, anaconda 3.6.5
 
