@@ -62,8 +62,8 @@ install.packages("ggplot2")
 ### Python package versions
 * TensorFlow: 2.3.1, 2.5.0, 2.3.1, 1.9.0 (GPU)
 * Numpy: 1.18.5, , 1.17.4, 1.14.3
-* functools: 3.8.2, 3.8.3, 3.6.0, anaconda 3.6.5 (GPU)
-* math: 3.8.2, 3.8.3, 3.6.0, anaconda 3.6.5 (GPU)
+* functools: 3.8.2, 3.8.3, 3.6.0, anaconda 3.6.5
+* math: 3.8.2, 3.8.3, 3.6.0, anaconda 3.6.5
 
 ## DEGAS documentation and examples
 * Documentation (https://github.com/tsteelejohnson91/DEGAS/blob/master/DEGAS_documentation.md)
