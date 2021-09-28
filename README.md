@@ -1,4 +1,5 @@
-# DEGAS: A transfer learning framework to infer impressions of cellular and patient phenotypes between patients and single cells
+# Diagnostic Evidence GAuge of Single cells (DEGAS): A flexible deep-transfer learning framework for prioritizing cells in relation to disease
+### https://www.biorxiv.org/content/10.1101/2020.06.16.142984v2
 ### Package development by: <br>Zhi Huang (https://github.com/huangzhii)<br>Travis S. Johnson (https://github.com/tsteelejohnson91)
 
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](LICENSE)
