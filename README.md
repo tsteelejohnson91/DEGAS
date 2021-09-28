@@ -69,7 +69,7 @@ install.packages("ggplot2")
 * Documentation (https://github.com/tsteelejohnson91/DEGAS/blob/master/DEGAS_documentation.md)
 * Simulation example (Coming soon)
 * GBM example (Coming soon)
-* AD example (https://github.com/tsteelejohnson91/DEGAS/tree/master/AD_example, Update coming soon)
+* AD example (https://github.com/tsteelejohnson91/DEGAS/blob/master/AD_example/AD_example.md)
 * MM example (https://github.com/tsteelejohnson91/DEGAS/blob/master/MM_example/MM_example.md)
 
 
