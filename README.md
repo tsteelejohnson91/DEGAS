@@ -56,8 +56,10 @@ install.packages("ggplot2")
 * R (3.4.4), Python (anaconda 3.6.5), TensorFlow GPU-enabled (1.9.0), NumPy (1.14.3), functools (anaconda 3.6.5), math (anaconda 3.6.5)
 
 ### R Package Versions
-* See Session Info in the Simulation, GBM, AD, and MM examples for version details
-* e.g. See bottom of https://github.com/tsteelejohnson91/DEGAS/blob/master/MM_example/MM_example.md
+* Rtsne: 0.15, 
+* ggplot2: 3.3.5, 3.3.0, 3.2.1
+* See Session Info in the Simulation, GBM, AD, and MM examples for more version details
+  * e.g. See bottom of https://github.com/tsteelejohnson91/DEGAS/blob/master/MM_example/MM_example.md
 
 ### Python package versions
 * TensorFlow: 2.3.1, 2.5.0, 2.3.1, 1.9.0 (GPU)
