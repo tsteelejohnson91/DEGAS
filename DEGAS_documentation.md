@@ -75,6 +75,12 @@ None<br>
 **Output**<br>
 None<br>
 
+**set_seed_term( inp )**<br>
+**Inputs**<br>
+**inp:** The seed to set for the DEGAS model.<br>
+**Output**<br>
+None<br>
+
 ## 2) Model training and prediction
 
 **runCCMTLBag( scExp, scLab, patExp, patLab, tmpDir, model_type, architecture, FFdepth, Bagdepth )**<br>
