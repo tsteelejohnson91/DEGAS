@@ -19,6 +19,7 @@ initDEGAS <- function(){
   DEGAS.lambda1 <<- 3.0
   DEGAS.lambda2 <<- 3.0
   DEGAS.lambda3 <<- 3.0
+  DEGAS.seed <<- "NULL"
 }
 
 #***************************************************************
@@ -91,6 +92,11 @@ set_patient_loss_term <- function(inp){
 set_MMD_loss_term <- function(inp){
   DEGAS.lambda3 <<- inp
 }
+
+# Manually reset the seed
+set_seed_term <- function(inp){
+  DEGAS.seed <<- inp
+ }
 
 #***************************************************************
 #***************************************************************
@@ -369,17 +375,20 @@ runCCMTL <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FF
   }
   writeInputFiles(scExp,scLab,patExp,patLab,tmpDir)
   message(checkForPy())
-  system(paste0(DEGAS.pyloc," ",tmpDir,model_type,"MTL.py ", tmpDir, " ",DEGAS.train_steps," ",DEGAS.scbatch_sz," ",DEGAS.patbatch_sz," ",DEGAS.hidden_feats," ",DEGAS.do_prc," ",DEGAS.lambda1," ",DEGAS.lambda2," ",DEGAS.lambda3))
+  system(paste0(DEGAS.pyloc," ",tmpDir,model_type,"MTL.py ", tmpDir, " ",DEGAS.train_steps," ",DEGAS.scbatch_sz," ",DEGAS.patbatch_sz," ",DEGAS.hidden_feats," ",DEGAS.do_prc," ",DEGAS.lambda1," ",DEGAS.lambda2," ",DEGAS.lambda3," ",DEGAS.seed))
   ccModel1 = readOutputFiles(tmpDir,model_type,architecture)
   return(ccModel1)
 }
 
 # Bootstrap aggregation wrapper for model training
 runCCMTLBag <- function(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FFdepth,Bagdepth){
+  orig_degas_seed = DEGAS.seed
   out <- list()
   for(i in 1:Bagdepth){
+    DEGAS.seed <<- orig_degas_seed + (i-1)
     out[[i]] <- runCCMTL(scExp,scLab,patExp,patLab,tmpDir,model_type,architecture,FFdepth)
   }
+  DEGAS.seed <<- orig_degas_seed
   return(out)
 }
 
