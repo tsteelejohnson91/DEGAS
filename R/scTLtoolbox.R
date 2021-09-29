@@ -100,7 +100,8 @@ set_seed_term <- function(inp){
    }else if (is.numeric(inp) & length(inp)==1){
      DEGAS.seed <<- inp
    }else{
-    message("ERROR: Input proper seed (NULL or <numeric value>)")
+    message("ERROR: Input proper seed (NULL or integer)")
+    message("Non-integer values will equal floor(value)")
    }
  }
 
