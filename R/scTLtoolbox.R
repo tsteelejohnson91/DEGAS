@@ -101,6 +101,7 @@ set_seed_term <- function(inp){
      DEGAS.seed <<- inp
    }else{
     message("ERROR: Input proper seed (NULL or <numeric value>)")
+   }
  }
 
 #***************************************************************
