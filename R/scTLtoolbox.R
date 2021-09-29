@@ -95,7 +95,12 @@ set_MMD_loss_term <- function(inp){
 
 # Manually reset the seed
 set_seed_term <- function(inp){
-  DEGAS.seed <<- inp
+  if(is.null(inp)){
+    DEGAS.seed <<- "NULL"
+   }else if (is.numeric(inp) & length(inp)==1){
+     DEGAS.seed <<- inp
+   }else{
+    message("ERROR: Input proper seed (NULL or <numeric value>)")
  }
 
 #***************************************************************
