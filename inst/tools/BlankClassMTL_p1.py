@@ -15,6 +15,9 @@ import math							#NEED
 import os							#NEED
 import sys							#NEED
 from os.path import isfile, join	#NEED
+if sys.argv[10] != "NULL":
+	np.random.seed(int(sys.argv[10]))
+	tf.compat.v1.set_random_seed(int(sys.argv[10]))
 
 #***********************************************************************
 # Gaussian kernel matrix
