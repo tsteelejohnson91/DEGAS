@@ -15,7 +15,7 @@ import os							#NEED
 import sys							#NEED
 from os.path import isfile, join	#NEED
 if sys.argv[10] != "NULL":
-	np.random.seed(float(sys.argv[10]))
+	np.random.seed(int(sys.argv[10]))
 	tf.compat.v1.set_random_seed(float(sys.argv[10]))
 
 #***********************************************************************
