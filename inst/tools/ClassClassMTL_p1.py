@@ -14,6 +14,8 @@ import math							#NEED
 import os							#NEED
 import sys							#NEED
 from os.path import isfile, join	#NEED
+np.random.seed(1)
+tf.random.set_seed(1)
 
 #***********************************************************************
 # Gaussian kernel matrix
