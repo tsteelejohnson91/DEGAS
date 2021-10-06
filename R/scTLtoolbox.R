@@ -121,7 +121,7 @@ scaleFunc <- function(x){return((x- min(x, na.rm = T)) /(max(x, na.rm = T)-min(x
 
 # Preprocess count data
 preprocessCounts <-function(X){
-  return(t(apply(t(apply(as.matrix(t(X)),1,normFunc)),1,scaleFunc)))
+  return(t(apply(t(apply(as.matrix(t(log2(X+1))),1,normFunc)),1,scaleFunc)))
 }
 
 # center to 0
