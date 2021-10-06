@@ -1,0 +1,143 @@
+---
+title: "Sim_example"
+author: "Travis Johnson"
+date: "10/04/2021"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load required packages
+```{r, max.height='100px', attr.output='.numberLines'}
+library(DEGAS)
+library(Rtsne)
+library(ggplot2)
+library(ClusterR)
+```
+
+# Load data
+```{r, max.height='100px', attr.output='.numberLines'}
+scCounts = read.csv('scCounts.csv',row.names=1)
+patCountsSim1 = read.csv('patCountsSim1.csv',row.names=1)
+patCountsSim2 = read.csv('patCountsSim2.csv',row.names=1)
+patCountsSim3 = read.csv('patCountsSim3.csv',row.names=1)
+patLab = read.csv('patLab.csv',row.names=1)
+```
+
+# Finding optimal cluster number
+```{r, max.height='100px', attr.output='.numberLines'}
+set.seed(2)
+scCounts.tsne = Rtsne(t(log2(scCounts+1)))
+opt_Med = Optimal_Clusters_Medoids(scCounts.tsne$Y, max_clusters = 10, criterion = "silhouette",distance_metric="euclidean")
+# User enter 4 since average silhouette width is highest at 4
+knitr::include_graphics("dissim_silh_plot.png")
+```
+
+# Defining clusters and plotting
+```{r, max.height='100px', attr.output='.numberLines'}
+clusts = Cluster_Medoids(scCounts.tsne$Y, clusters = 4, swap_phase = TRUE, verbose = F)
+outputs = data.frame(tSNE1=scCounts.tsne$Y[,1],tSNE2=scCounts.tsne$Y[,2],Cluster=factor(clusts$clusters))
+ggplot(outputs,aes(x=tSNE1,y=tSNE2,color=Cluster)) + geom_point()
+```
+
+# Normalizing and Standardizing data
+```{r, max.height='100px', attr.output='.numberLines'}
+# Generating single cell label matrix
+scLab = toOneHot(clusts$clusters)
+scDat = preprocessCounts(scCounts)
+patDatSim1 = preprocessCounts(patCountsSim1)
+patDatSim2 = preprocessCounts(patCountsSim2)
+patDatSim3 = preprocessCounts(patCountsSim3)
+```
+
+# Initialize DEGAS framework
+```{r, max.height='100px', attr.output='.numberLines'}
+path.data = ''
+path.result = ''
+initDEGAS()
+tmpDir = paste0(path.result, 'tmp/')
+```
+
+# Training DEGAS models for each simulation
+```{r, max.height='100px', attr.output='.numberLines'}
+set_seed_term(2)
+ccModelSim1 = runCCMTLBag(scDat,scLab,patDatSim1,patLab,tmpDir,'ClassClass','DenseNet',3,5)
+set_seed_term(2)
+ccModelSim2 = runCCMTLBag(scDat,scLab,patDatSim2,patLab,tmpDir,'ClassClass','DenseNet',3,5)
+set_seed_term(2)
+ccModelSim3 = runCCMTLBag(scDat,scLab,patDatSim3,patLab,tmpDir,'ClassClass','DenseNet',3,5)
+```
+
+# Predictions from DEGAS model for each simulation
+```{r, max.height='100px', attr.output='.numberLines'}
+# Predicting patient outcome in cells
+# ie, predicting AD association in individual cells
+scpatPredsSim1 = predClassBag(ccModelSim1,scDat,'pat')
+colnames(scpatPredsSim1) = colnames(patLab)
+scpatPredsSim2 = predClassBag(ccModelSim2,scDat,'pat')
+colnames(scpatPredsSim2) = colnames(patLab)
+scpatPredsSim3 = predClassBag(ccModelSim3,scDat,'pat')
+colnames(scpatPredsSim3) = colnames(patLab)
+```
+
+# Displaying single cells overlaid with AD impressions
+```{r, max.height='100px', attr.output='.numberLines'}
+# kNN smoothing of disease association
+impressions_sc_smooth_sim1 = knnSmooth(scpatPredsSim1[,"D"],scCounts.tsne$Y)
+impressions_sc_smooth_sim2 = knnSmooth(scpatPredsSim2[,"D"],scCounts.tsne$Y)
+impressions_sc_smooth_sim3 = knnSmooth(scpatPredsSim3[,"D"],scCounts.tsne$Y)
+# Conversion of disease association to correlation
+impressions_sc_smooth_cor_sim1 = toCorrCoeff(impressions_sc_smooth_sim1)
+impressions_sc_smooth_cor_sim2 = toCorrCoeff(impressions_sc_smooth_sim2)
+impressions_sc_smooth_cor_sim3 = toCorrCoeff(impressions_sc_smooth_sim3)
+tmp = data.frame(tSNE1=scCounts.tsne$Y[,1],tSNE2=scCounts.tsne$Y[,2],
+                 DisSim1=impressions_sc_smooth_cor_sim1,
+                 DisSim2=impressions_sc_smooth_cor_sim2,
+                 DisSim3=impressions_sc_smooth_cor_sim3,
+                 CT=fromOneHot(scLab))
+# Plotting disease assoiations for simulaiton 1
+p = ggplot(tmp,aes(x=tSNE1,y=tSNE2,color=DisSim1,shape=CT))+ geom_point() + 
+          scale_color_gradient2(low = "black",mid="lavender",high="red")
+plot(p+labs(color='Disease\nassociation',shape='Cell type') +
+       theme(legend.title=element_text(size=rel(1)),
+             legend.text=element_text(size=rel(1)),
+             axis.title=element_text(size=rel(1)),
+             axis.text.x=element_text(size=rel(1)),
+             axis.text.y=element_text(size=rel(1))))
+
+p = ggplot(tmp,aes(x=tSNE1,y=tSNE2,color=DisSim2,shape=CT))+ geom_point() + 
+          scale_color_gradient2(low = "black",mid="lavender",high="red")
+plot(p+labs(color='Disease\nassociation',shape='Cell type') +
+       theme(legend.title=element_text(size=rel(1)),
+             legend.text=element_text(size=rel(1)),
+             axis.title=element_text(size=rel(1)),
+             axis.text.x=element_text(size=rel(1)),
+             axis.text.y=element_text(size=rel(1))))
+
+p = ggplot(tmp,aes(x=tSNE1,y=tSNE2,color=DisSim3,shape=CT))+ geom_point() + 
+          scale_color_gradient2(low = "black",mid="lavender",high="red")
+plot(p+labs(color='Disease\nassociation',shape='Cell type') +
+       theme(legend.title=element_text(size=rel(1)),
+             legend.text=element_text(size=rel(1)),
+             axis.title=element_text(size=rel(1)),
+             axis.text.x=element_text(size=rel(1)),
+             axis.text.y=element_text(size=rel(1))))
+
+
+```
+
+# Session Info
+```{r, max.height='100px', attr.output='.numberLines'}
+sessionInfo()
+```
+
+
+
+
+
+
+
+
+
