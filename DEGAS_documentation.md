@@ -14,6 +14,12 @@ A vector of z-scores based on the original numeric vector<br>
 **Output**<br>
 A vector of [0,1] scaled values<br>
 <br>
+**preprocessCounts( X )**<br>
+**Inputs**<br>
+**X:** A matrix or dataframe of counts where the rows represent genes and the columns represent cells/samples<br>
+**Output**<br>
+A matrix of normalized and scaled expression values to use as input for DEGAS model training<br>
+<br>
 **initDEGAS()**<br>
 This function must be run to initialize the DEGAS parameters before training the model. The following functions can be used to change the initialized DEGAS parameters to the user’s preference.<br>
 **Inputs**<br>
