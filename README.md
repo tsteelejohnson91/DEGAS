@@ -1,4 +1,4 @@
-# Diagnostic Evidence GAuge of Single cells (DEGAS): A flexible deep-transfer learning framework for prioritizing cells in relation to disease
+# Diagnostic Evidence GAuge of Single cells (DEGAS): A flexible deep transfer learning framework for prioritizing cells in relation to disease
 ### https://www.biorxiv.org/content/10.1101/2020.06.16.142984v2
 ### Package development by: <br>Zhi Huang (https://github.com/huangzhii)<br>Travis S. Johnson (https://github.com/tsteelejohnson91)
 
