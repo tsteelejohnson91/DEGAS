@@ -124,6 +124,29 @@ preprocessCounts <-function(X){
   return(t(apply(t(apply(as.matrix(t(X)),1,normFunc)),1,scaleFunc)))
 }
 
+preprocessAllCounts <- function(sc.dat,pt.dat){
+  ks.d = c(0,0,0,0)
+  names(ks.d) = c("nonenone","log2none","nonelog2","log2log2")
+  tmp = suppressWarnings(ks.test(preprocessCounts(sc.dat),preprocessCounts(pt.dat)))
+  ks.d["nonenone"] = tmp$statistic
+  tmp = suppressWarnings(ks.test(preprocessCounts(log2(sc.dat+1)),preprocessCounts(pt.dat)))
+  ks.d["log2none"] = tmp$statistic
+  tmp = suppressWarnings(ks.test(preprocessCounts(sc.dat),preprocessCounts(log2(pt.dat+1))))
+  ks.d["nonelog2"] = tmp$statistic
+  tmp = suppressWarnings(ks.test(preprocessCounts(log2(sc.dat+1)),preprocessCounts(log2(pt.dat+1))))
+  ks.d["log2log2"] = tmp$statistic
+  message(names(ks.d)[ks.d==min(ks.d)])
+  if(names(ks.d)[ks.d==min(ks.d)]=="nonenone"){
+    return(list(scDat = preprocessCounts(sc.dat),patDat = preprocessCounts(pt.dat)))
+  }else if(names(ks.d)[ks.d==min(ks.d)]=="log2none"){
+    return(list(scDat = preprocessCounts(log2(sc.dat+1)),patDat = preprocessCounts(pt.dat)))
+  }else if(names(ks.d)[ks.d==min(ks.d)]=="nonelog2"){
+    return(list(scDat = preprocessCounts(sc.dat),patDat = preprocessCounts(log2(pt.dat+1))))
+  }else{
+    return(list(scDat = preprocessCounts(log2(sc.dat+1)),patDat = preprocessCounts(log2(pt.dat+1))))
+  }
+}
+
 # center to 0
 centerFunc <- function(x){return(x-mean(x,na.rm=T))}
 
