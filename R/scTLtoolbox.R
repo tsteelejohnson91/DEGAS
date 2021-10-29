@@ -120,12 +120,12 @@ normFunc <- function(x){return((x-mean(x, na.rm = T))/(sd(x, na.rm = T)+1e-3))}
 scaleFunc <- function(x){return((x- min(x, na.rm = T)) /(max(x, na.rm = T)-min(x, na.rm = T)+1e-3))}
 
 # Preprocess count data
-preprocessCounts <-function(X){
+normalizeScale <-function(X){
   return(t(apply(t(apply(as.matrix(t(X)),1,normFunc)),1,scaleFunc)))
 }
 
-preprocessLogCounts <- function(X){
-  return(preprocessCounts(1.5^log2(X+1)))  
+preprocessCounts <- function(X){
+  return(normalizeScale(1.5^log2(X+1)))  
 }
 
 preprocessAllCounts <- function(sc.dat,pt.dat){
