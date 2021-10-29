@@ -124,6 +124,10 @@ preprocessCounts <-function(X){
   return(t(apply(t(apply(as.matrix(t(X)),1,normFunc)),1,scaleFunc)))
 }
 
+preprocessLogCounts <- function(X){
+  return(preprocessCounts(1.5^log2(X+1)))  
+}
+
 preprocessAllCounts <- function(sc.dat,pt.dat){
   ks.d = c(0,0,0,0)
   names(ks.d) = c("nonenone","log2none","nonelog2","log2log2")
