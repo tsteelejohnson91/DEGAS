@@ -76,4 +76,9 @@ install.packages("ggplot2")
 * AD example (https://github.com/tsteelejohnson91/DEGAS/blob/master/AD_example/AD_example.md)
 * MM example (https://github.com/tsteelejohnson91/DEGAS/blob/master/MM_example/MM_example.md)
 
+## Coming Soon
+Diagnostic Evidence GAuge of Spatial transcriptomics (DEGAS)
+
+
+
 
