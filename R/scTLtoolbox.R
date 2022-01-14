@@ -621,13 +621,13 @@ knnSmooth <- function(probs,locs,k=5){
     N = length(probs)
     for(i in 1:N){
       idx = order(dists[i,])
-      out[i] = mean(probs[idx[1:k]])
+      out[i] = mean(probs[idx[1:k]],na.rm=TRUE)
     }
   }else{
     N = dim(locs)[1]
     for(i in 1:N){
       idx = order(dists[i,])
-      out[i,] = colMeans(probs[idx[1:k],])
+      out[i,] = colMeans(probs[idx[1:k],],na.rm=TRUE)
     }
   }
   return(out)
