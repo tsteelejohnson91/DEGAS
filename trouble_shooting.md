@@ -1,6 +1,5 @@
 ### Frequent trouble shooting steps
-1) If you cannot follow the examples provided on github  
-please check the following.  
+#### If you cannot follow the examples provided on github please check the following.  
   
 Open the terminal on your computer.
   
@@ -37,8 +36,10 @@ Otherwise install them with pip3 from terminal.
   
 ``$pip3 nameofpackage``
 
-2) When using the toOneHot() function please do not use factors as input. Please convert to character before use.
-3) Errors when training the model
+#### Misc errors
+When using the toOneHot() function please do not use factors as input. Please convert to character before use.
+
+#### Errors when training the model
 Other common errors will occur when training the model (i.e. runCCMTLBag step). Frequently an error will read:
 "cannot open file '/path/to/tmp/Activations.csv': No such file or directory"
 This means that the python code did not execute properly and did not finish training the model. The most frequent cause
