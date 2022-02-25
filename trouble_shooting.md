@@ -49,6 +49,6 @@ when you open this version of python that you can import tensorflow: ``>>>import
 the setup steps and installed tensorflow but still get this error, your tensorflow installation is not
 associated with the python version you are running in the DEGAS package. You either need to install tensorflow for the version
 of python displayed by the runCCMTLBAg output or you need to specify the path the the python version with tensorflow using the
-``>set_python_path('/path/to/pythonWithTensorflow')`` function.
+``>setPython('/path/to/pythonWithTensorflow')`` function.
  
 ### Debugging log
