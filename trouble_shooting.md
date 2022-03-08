@@ -50,5 +50,7 @@ the setup steps and installed tensorflow but still get this error, your tensorfl
 associated with the python version you are running in the DEGAS package. You either need to install tensorflow for the version
 of python displayed by the runCCMTLBAg output or you need to specify the path the the python version with tensorflow using the
 ``>setPython('/path/to/pythonWithTensorflow')`` function.
+
+Another error can occur when there are very few cells/samples in a given class when using BlankClass, ClassBlank, and ClassClass models. To avoid the error please do not include classes with very few examples. It is best to combine very infrequent classes with other associated classes to avoid this error or overfitting a class with few examples.
  
 ### Debugging log
