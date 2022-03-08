@@ -1,0 +1,590 @@
+---
+title: "DEGAS: Spatial transcriptomic analysis of pancreatic cancer"
+author: "Justin Louis Couetil"
+date: "March 03, 2022"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: true
+    theme: lumen
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Load required packages
+
+```{r}
+library(DEGAS)
+library(Rtsne)
+library(ggplot2)
+library(here)
+library(reticulate)
+library(tidyverse)
+library(magrittr)
+```
+
+Trying to visualize ST data
+
+# Spatial Data
+
+To note (again):
+
+I added "ID" into the stDat.txt file, because they were lacking a title. This meant that they did not read in properly...
+
+This is where the data from Moncada's publication can be found:
+
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE111672
+
+
+## Reading in ST gene data...
+
+```{r}
+# reading in
+stDat <- readr::read_csv(here("data/PDAC/data/genetic/spatial/stDat.txt"))
+
+stDat <- stDat %>% mutate_all(as.character)
+
+
+# Now, I want the columns to be genes, and the rows to be the ST regions (i.e. ST1, ST2 ... ST428)
+test <- slice(stDat, 1)
+
+test[1,] <- colnames(test) %>% as.matrix() %>% t()
+
+# transpose the data
+stDat <- rbind(test, stDat) %>% t() %>% as_tibble()
+
+stDat <- as_tibble(stDat)
+
+# make rename the columns as the gene names.
+
+colnames(stDat) <- slice(stDat, 1)
+stDat <- slice(stDat, -1)
+
+# Success! Now the the data table is flipped, with the genes as columns!
+
+# Finally, correcting the data types:
+# Column [,1] is the ID field. So that's a character! All the others can be integers, since there are no decimals.
+stDat <- stDat %>% mutate_at(vars(2:ncol(stDat)), as.integer)
+```
+
+
+
+## Normalization
+
+Using the preprocessCounts() function from DEGAS.
+
+```{r}
+# the first column is the ST spot ID.
+
+stDat <- cbind(stDat[1], t(preprocessCounts(stDat[-1]))) %>% as_tibble()
+```
+
+
+## Reading in ST location data
+
+the original stLab.txt file was edited by me. I added "ID" to the beginning of the first row. Otherwise there was a mismatch in the number of entries and the number of columns:
+
+**"ID"** "coord1" "coord2" "coord1.norm" "coord2.norm" "spotID" "histology" "histology_color"
+"ST1" 10 10 0.567142857142857 0.201538461538462 "ST1" "Interstitium" "green"
+
+```{r}
+stLab <- readr::read_delim(here::here("data/PDAC/data/genetic/spatial/stLab.txt"), delim = " ")
+```
+
+Here is the slide, pathologist annotations for tissue are from Moncada et al, Nature Biotechnology, 2020, Figure 4, Panel A.
+
+Based on their publication, these are the annotations for the little plot below. (**note the colors below are not the same as they are in their pub.**, but they are the same annotations!)
+
+- black = cancer
+
+- blue = normal pancreatic tissue
+
+- red = duct epithelium
+
+- green = Interstitium/stroma
+
+
+```{r}
+par(pty = "s")
+plot(x = stLab$coord1, y = stLab$coord2, xlab = '', ylab = '', col = as.factor(stLab$histology))
+```
+
+And here, I've pasted in their image, with the previous plot roughly overlaid.
+
+```{r}
+# Import the image
+img <- png::readPNG(here::here("data/PDAC/data/genetic/spatial", "PDACA1_labelled_edited.png"))
+
+# Plot with background image
+ggplot(stLab, aes(x = stLab$coord1, y = stLab$coord2)) +
+  ggpubr::background_image(img) +
+  #geom_point() +
+  coord_fixed(ratio = 1) +
+  labs(x = "", y = '')
+```
+
+One-hot encoding the labels.
+
+[cell#, HISTO_type1]
+ID1 1, 0, 0, 0
+ID2 0, 1, 0, 0
+ID3 0, 0, 0, 1
+
+```{r}
+stLab <- stLab %>% mutate(histology = str_replace_all(histology, pattern = " ", replacement = "_"))
+```
+
+```{r}
+stLab <- stLab %>% pivot_wider(id_cols = ID, names_from = histology, values_from = histology)
+```
+
+There we go, done!
+
+```{r}
+stLab <-
+  stLab %>%
+  mutate_at(vars(2:ncol(stLab)), gsub, pattern = ".*", replacement = 1) %>%
+  mutate_at(vars(2:ncol(stLab)), replace_na, replace = 0) %>%
+  mutate_at(vars(2:ncol(stLab)), as.integer) # I added this line recently, make sure it changes the data type from chr to int.
+```
+
+
+
+# Clinical Data
+
+## Survival
+
+https://portal.gdc.cancer.gov/projects/TCGA-PAAD
+
+```{r}
+patLab <- read.delim(here("data/PDAC/data/clinical/PAAD.clin.merged.picked.txt"), header=FALSE)
+
+patLab <- patLab %>% t() %>% as_tibble()
+```
+
+```{r}
+colnames(patLab) <- slice(patLab, 1)
+
+patLab <- slice(patLab, -1)
+```
+
+There are no entries with both days_to_death AND days_to_last_followup. So it seems there are no errors to worry about and we can conclude the Relapse Free Survival Time for each patient.
+
+```{r}
+patLab <- patLab %>% select(TCGA_ref = "Hybridization REF",days_to_death, days_to_last_followup)
+```
+
+Ok! Here we go, the patLab object is set up. The only thing to do before this is ready for DEGAS is to remove the TCGA_ref.
+
+```{r}
+holder <- patLab %>% filter(is.na(days_to_death))
+holder <- holder %>% mutate(RFS_Time = days_to_last_followup, RFS_Event = 0) %>% select(-c('days_to_death', 'days_to_last_followup'))
+
+patLab <- patLab %>% filter(is.na(days_to_last_followup)) %>% mutate(RFS_Time = days_to_death, RFS_Event = 1) %>% select(-c('days_to_death', 'days_to_last_followup')) %>% full_join(holder)
+
+patLab$RFS_Time <- patLab$RFS_Time %>% as.numeric()
+```
+
+
+## RNA 
+
+http://firebrowse.org/ --> PAAD mRNASeq Archives --> illuminahiseq_rnaseqv2-RSEM_genes_normalized --> this file shows the reads on genes:
+
+Following the same procedure as above to read in the data.
+
+```{r}
+patDat <- read.delim(here::here('data/PDAC/data/clinical/gdac.broadinstitute.org_PAAD.Merge_rnaseqv2__illuminahiseq_rnaseqv2__unc_edu__Level_3__RSEM_genes_normalized__data.Level_3.2016012800.0.0/PAAD.rnaseqv2__illuminahiseq_rnaseqv2__unc_edu__Level_3__RSEM_genes_normalized__data.data.txt'), header=FALSE)
+
+patDat <- patDat %>% t() %>% as_tibble()
+```
+
+```{r}
+colnames(patDat) <- slice(patDat, 1)
+
+patDat <- slice(patDat, -1)
+```
+
+So, now I see the problem is that the colnames have "|" and then their NCBI ID after that. I just want the gene names. 
+
+Note that there are some genes with duplicate names! I just get rid of them below.
+
+```{r}
+patDat <- patDat %>% select(-c(`SLC35E2|728661`,`SLC35E2|9906`))
+```
+
+
+```{r}
+colnames(patDat) <- gsub(pattern = "\\|.*",replacement = "", colnames(patDat)) # this thing is wrong i think.
+```
+
+Getting rid of hypothetical loci (they begin with "?")
+
+```{r}
+cols_to_delete <- stringr::str_detect(colnames(patDat), pattern = "\\?") %>% which() #%>% sapply(isTRUE)
+patDat <- patDat %>% select(-cols_to_delete)
+```
+
+Now to correct the data type
+
+```{r}
+patDat <- patDat %>% mutate(across(.cols = 3:ncol(patDat),.fns = as.numeric))
+```
+
+...and finally, normalizing the data with the DEGAS preprocessCounts() function.
+
+```{r}
+patDat <- cbind(patDat[1:2], t(preprocessCounts(patDat[-c(1,2)]))) %>% as_tibble()
+```
+
+
+There aren't the same number of entries for the survival data as the patient transcriptomic data!
+
+```{r}
+nrow(patDat)
+nrow(patLab)
+```
+
+```{r}
+patDat <- patDat %>% mutate(`Hybridization REF` = gsub(tolower(`Hybridization REF`), pattern = "-[0-9][0-9]a.*", replacement = ""))
+```
+
+This is where I get rid of the mismatches between # of entries.
+
+```{r}
+colnames(patDat)[1] <- "TCGA_hybr_ref"
+colnames(patLab)[1] <- "TCGA_hybr_ref"
+```
+
+
+```{r}
+# patDat <- patDat[match(patDat$TCGA_hybr_ref, patLab$TCGA_hybr_ref),]
+# patLab[complete.cases(patLab[match(patLab$TCGA_hybr_ref, patDat$TCGA_hybr_ref, by),]),]
+
+patLab <- patLab %>% inner_join(patDat %>% select('TCGA_hybr_ref'), by = "TCGA_hybr_ref")
+
+```
+
+
+
+# DEGAS
+
+
+Just look at the intersection of genes between ST (stDat) data and TCGA (patDat).
+
+```{r}
+overlapping_genes <- colnames(patDat)[match(colnames(stDat), colnames(patDat))]
+overlapping_genes <- overlapping_genes[!is.na(overlapping_genes)]
+
+patDat <- patDat %>% select(all_of(overlapping_genes)) # this also gets rid of the ID column...
+stDat <- stDat %>% select(all_of(overlapping_genes)) # this also gets rid of the ID column...
+```
+
+Have to get rid of NA, turn them to 0's.
+
+```{r}
+# # getwd()
+stDat <- stDat %>% mutate_all(replace_na, replace = 0)
+patDat <- patDat %>% mutate_all(replace_na, replace = 0)
+```
+
+## Initialize DEGAS framework
+
+```{r}
+path.data = ''
+path.result = ''
+initDEGAS()
+tmpDir = paste0(path.result, 'tmp/')
+```
+
+```{r}
+stLab <- stLab %>% select(-ID)
+```
+
+## Feature selection
+
+Choosing the most highly variable genes within your spatial/single cell dataset seems to perform the best for identifying differences within your dataset. This makes intuitive sense - like using cell markers to differentiate cells. Because the TCGA PDAC data set holds ~183 patients, I will select 20 of the most highly variable genes, which is about one tenth the number of entries in our dataset. 
+
+```{r}
+high_var_genes <- stDat %>% apply(2, var) %>% sort(decreasing = TRUE) %>% head(20) %>% names()
+```
+
+```{r}
+print(high_var_genes)
+```
+
+This is the distribution of expression of ALL genes across the ENTIRE ST array.
+
+```{r}
+stDat %>% apply(2, sum) %>% hist(main = "Histogram of all ST expression")
+```
+
+
+## Training DEGAS model
+
+
+```{r eval=FALSE}
+set_seed_term(2)
+exp_7_survival_PDAC = 
+  runCCMTLBag(stDat %>% select(all_of(high_var_genes)),
+              stLab,
+              patDat%>% select(all_of(high_var_genes)),
+              patLab %>% select(-TCGA_hybr_ref),tmpDir,'ClassCox','DenseNet',3,5)
+```
+
+```{r eval=FALSE}
+saveRDS(here('models/Exp_7/Exp_7_survival_20_high_var_PDAC'), exp_7_survival_PDAC)
+```
+
+```{r}
+exp_7_survival_PDAC <- readRDS(here('models/Exp_7/Exp_7_survival_20_high_var_PDAC'))
+```
+
+
+```{r}
+# Predicting patient outcome in cells
+# ie, predicting PAAD association in individual cells
+stpatPreds = predClassBag(exp_7_survival_PDAC,stDat %>% select(all_of(high_var_genes)),'pat')
+colnames(stpatPreds) = c("Hazard")
+```
+
+I use knnSmooth from the DEGAS package, using the spatial coordinates for smoothing of hazard predictions.
+
+```{r}
+st_coord <- readr::read_delim(here::here("data/PDAC/data/genetic/spatial/stLab.txt"), delim = " ") %>% select(coord1, coord2)
+```
+
+
+```{r}
+haz_smooth_coords <- knnSmooth(as.numeric(stpatPreds), st_coord %>% select(coord1, coord2) %>% as.matrix, k = 6) # Here, I am using the UMAP coordinates the smooth the data. I could also use the spatial location (or in addition to...). K = 6, because each ST spot has 6 direct neighbors (image as a hexagon with centroid).
+```
+
+
+
+## Plotting predictions
+
+```{r}
+# tSNE_PAAD <- read_csv(here('st_DEGAS_example', 'seurat_integrated_tsne.csv'))
+
+spot_locations <- readr::read_delim(here::here("data/PDAC/data/genetic/spatial/stLab.txt"), delim = " ")
+```
+
+Interesting! The region labeled by pathologists was labeled as being high hazard by DEGAS! As high hazard as the cancer regions themselves. Let's now compare the "weird" region (labeled normal, but high predicted hazard), to the other normal regions, to see if there's something significantly different.
+
+```{r}
+stHist_labels <- readr::read_delim(here::here("data/PDAC/data/genetic/spatial/stLab.txt"), delim = " ")
+```
+
+```{r}
+ggpubr::ggarrange(
+  ggplot(cbind(st_coord, Hazard = scaleFunc(as.matrix(haz_smooth_coords))>0.5), 
+       aes(x=coord1, y=coord2)) +  # shape = CT
+  geom_point(aes(colour = Hazard), size = 2) +
+  #scale_colour_gradient2(high = "red",
+  #                       mid = "white",
+  #                       low = "blue") +
+  coord_fixed(ratio = 1) +
+  labs(x = '', y = '') + theme_void(),
+  ggplot(st_coord, aes(x = coord1, y = coord2)) +
+  ggpubr::background_image(img) +
+  #geom_point() +
+  coord_fixed(ratio = 1) +
+  labs(x = "", y = ''))
+```
+
+So, we have this **weird**, which was labeled normal by the pathologists in Moncada's publication, but shows up as being implicated with poor survival by DEGAS. Below, I compare this "weird" region, to the other "normal" regions.
+
+```{r}
+st_weird <- read_csv(here('data/PDAC/data/genetic/spatial/stLab_weird.csv'))
+```
+
+
+```{r out.width="100%"}
+ggpubr::ggarrange(ggplot(st_weird, aes(x = coord1, y = coord2, color = histology)) +
+            geom_point() + coord_fixed(ratio = 1) +
+            theme_void(), 
+          ggplot(cbind(stHist_labels, `Hazard above 0.5` = scaleFunc(as.matrix(haz_smooth_coords))>0.5) %>% filter(histology == "Normal pancreatic tissue"),
+                 aes(x = coord1, y = coord2,
+                     color = `Hazard above 0.5`)) +
+            geom_point() + coord_fixed(ratio = 1) +
+            theme_void() #+
+  # scale_colour_gradient2(high = "red",
+  #                        mid = "white",
+  #                        low = "blue"), ncol = 3, widths = c(2,1)
+
+          )
+```
+
+
+
+
+```{r eval = FALSE, echo = FALSE}
+normal_label_stDat <- cbind(stHist_labels, stDat, Hazard = scaleFunc(as.matrix(haz_smooth_coords)))%>% filter(histology == "Normal pancreatic tissue") %>% mutate(weird = ifelse(Hazard > 0.5, 1L, 0L)) %>% select(coord1, coord2, weird, all_of(colnames(stDat)))
+
+
+test_list <- list()
+pval_array <- c()
+test_statistic_array <- c()
+log2fc_array <- c()
+
+vec_ttest <- function(x){t.test(x~normal_label_stDat$weird)}
+
+test_list <- apply(normal_label_stDat[colnames(stDat)], 2, function(x) vec_ttest(x))
+
+
+for (i in test_list) {
+  pval_array <- append(pval_array, i$p.value)
+  test_statistic_array <- append(test_statistic_array, i$statistic)
+  log2fc_array <- append(log2fc_array,
+                         log2(i$estimate[['mean in group 1']]/i$estimate[['mean in group 0']]))
+}
+```
+
+
+
+```{r eval = FALSE, echo = FALSE}
+normal_weird_paired <- tibble(gene = colnames(stDat),
+                                           log2fc = log2fc_array,
+                                           tstat = test_statistic_array,
+                                           pval = pval_array,
+                                           pval_adj_fdr = -log(p.adjust(pval_array, method = "fdr")),
+                                           pval_adj_bonf = -log(p.adjust(pval_array, method = "bonferroni")))
+
+# write_csv(normal_cancerous_paired_tests_tb, file = here('BRCA/data/breast_normal_cancerous_paired_tests_tb.csv'))
+```
+
+
+```{r eval = FALSE, echo = FALSE}
+ggplot(normal_weird_paired, aes(x = log2fc, y = pval_adj_fdr)) + geom_point() +
+  ggrepel::geom_label_repel(normal_weird_paired %>% filter(pval_adj_fdr>17 | log2fc < -2 & !is.infinite(abs(log2fc))), mapping = aes(label = gene),
+                            min.segment.length = 0,
+                              max.overlaps = Inf,
+                              size = 2)
+```
+
+
+# Investigating DEGAS predictions
+
+Comparing weird with the two other normal regions:
+
+I re-read in the pancreatic ST data, because the preprocessing for the neural network is not amenable to looking at the log fold changes of transcripts -- it's meant for input into the neural network.
+
+```{r}
+# reading in the RAW data. Not normalized.
+raw_stDat <- readr::read_csv(here("data/PDAC/data/genetic/spatial/stDat.txt"))
+
+raw_stDat <- raw_stDat %>% mutate_all(as.character)
+
+
+# Now, I want the columns to be genes, and the rows to be the ST regions (i.e. ST1, ST2 ... ST428)
+test <- slice(raw_stDat, 1)
+
+test[1,] <- colnames(test) %>% as.matrix() %>% t()
+
+# transpose the data
+raw_stDat <- rbind(test, raw_stDat) %>% t() %>% as_tibble()
+
+raw_stDat <- as_tibble(raw_stDat)
+
+# make rename the columns as the gene names.
+
+colnames(raw_stDat) <- slice(raw_stDat, 1)
+raw_stDat <- slice(raw_stDat, -1)
+
+# Success! Now the the data table is flipped, with the genes as columns!
+
+# Finally, correcting the data types:
+# Column [,1] is the ID field. So that's a character! All the others can be integers, since there are no decimals.
+raw_stDat <- raw_stDat %>% mutate_at(vars(2:ncol(raw_stDat)), as.integer)
+
+# Taking transcripts/total RNA at each spot (kind of like TPM). Here I find the total RNA at each spot.
+raw_stDat %<>% mutate(RNA_reads = rowSums(across(where(is.integer))))
+
+# Doing the actual calculation for transcripts/total RNA
+raw_stDat %<>% mutate(across(.cols = where(is.integer), .fns = ~ ./RNA_reads))
+
+# Scaling the values from 0 to 1. 
+raw_stDat %<>% mutate(across(.cols = colnames(stDat), .fns = scaleFunc))
+```
+
+
+
+```{r}
+normal_label_stDat <- cbind(raw_stDat, st_weird %>% select(coord1, coord2, histology, weird)) %>% filter(histology == "Normal pancreatic tissue") 
+```
+
+
+```{r}
+test_list <- list()
+pval_array <- c()
+test_statistic_array <- c()
+log2fc_array <- c()
+
+vec_ttest <- function(x){t.test(x~normal_label_stDat$weird)}
+
+test_list <- apply(normal_label_stDat[colnames(stDat)], 2, function(x) vec_ttest(x))
+
+
+for (i in test_list) {
+  pval_array <- append(pval_array, i$p.value)
+  test_statistic_array <- append(test_statistic_array, i$statistic)
+  log2fc_array <- append(log2fc_array,
+                         log2(i$estimate[['mean in group 1']]/i$estimate[['mean in group 0']]))
+}
+```
+
+
+
+```{r}
+normal_weird_paired <- tibble(gene = colnames(stDat),
+                                           log2fc = log2fc_array,
+                                           tstat = test_statistic_array,
+                                           pval = pval_array,
+                                           pval_adj_fdr = -log(p.adjust(pval_array, method = "fdr")),
+                                           pval_adj_bonf = -log(p.adjust(pval_array, method = "bonferroni")))
+
+# write_csv(normal_cancerous_paired_tests_tb, file = here('BRCA/data/breast_normal_cancerous_paired_tests_tb.csv'))
+```
+
+
+```{r}
+ggplot(normal_weird_paired, aes(x = log2fc, y = -log(pval))) + geom_point() +
+  ggrepel::geom_label_repel(normal_weird_paired %>% filter(-log(pval)>4), mapping = aes(label = gene),
+                            min.segment.length = 0,
+                              max.overlaps = Inf,
+                              size = 2)
+```
+
+# Conclusion
+
+Below, I pulled some publications which mention the most up and down-regulated genes. Key themes to notice are that this "weird" region may be normal tissue that now has progressed through the epithelial-to-mesenchymal transition to become more cancerous than normal: There are up-regulated genes that are markers and mediators of poor prognosis in pancreatic and other types of cancers. The actual "normal" regions shows only few cancer-associated genes (ARAF, KRT18), and but shows markers of inflammatory pancreatitis -- REG3A, PRSS1, and typical pancreatic genes like elastases (needed for digestion, CELA3B, https://www.ncbi.nlm.nih.gov/gene/23436). The "normal" regions may reflect Pancreatic Intraepithelial Neoplasia (PaIN), which is frequently seen adjacent to pancreatic cancer, and thought to be a precursor lesion (https://www.nature.com/articles/3880877#Sec6).
+
+**It seems that DEGAS has identified the transition of normal tissue to cancerous tissue in the adjacent areas of pancreatic cancer, which would not be identified by inspection from a pathologist.** For the few patients that are candidates for surgical resection of pancreatic cancer, there is a high recurrence rate after the procedure (https://pubmed.ncbi.nlm.nih.gov/26603829/), perhaps the reason is that adjacent normal tissue is infact in transition to cancer.
+
+"**SDF4** was suggested to be regulated in Ca2+-dependent secretory cargo sorting pathways in the trans-Golgi network (TGN), exhibited increased expression in multiple types of cancer cells with higher proliferation and metastatic potential and was shown to promote cancer cell migration31,32,33" - https://www.nature.com/articles/s41420-021-00478-0#:~:text=SDF4%20was%20suggested%20to%20be,migration31%2C32%2C33.
+
+"**RBM8A** was up-regulated in GBM tissues, and its higher expression correlated with worse prognosis. Knockdown of RBM8A inhibited GBM progression and invasion ability both in vitro and in vivo. On the contrary, overexpression of RBM8A promoted GBM progression and invasion ability. Enrichment analysis of differentially expressed genes in GBM data identified the Notch1/STAT3 network as a potential downstream target of RBM8A, and this was supported by molecular docking studies. Furthermore, we demonstrated that RBM8A regulates the transcriptional activity of CBF1." - https://www.frontiersin.org/articles/10.3389/fonc.2021.736941/full
+
+"**MCL1** is an important antiapoptotic member of the BCL-2 family that is distinguishable from other family members based on its relatively short half-life. Emerging studies have revealed the crucial role of MCL1 in the chemoresistance of cancer cells. The antiapoptotic function of MCL1 makes it a popular therapeutic target, although specific inhibitors have begun to emerge only recently. Notably, emerging studies have reported that several E3 ligases and deubiquitinases modulate MCL1 stability, providing an alternate means of targeting MCL1 activity." - https://www.nature.com/articles/s41419-020-02760-y
+
+
+"**CELF1** is necessary and sufficient for both mesenchymal transition and metastatic colonization, and CELF1 protein, but not mRNA, is significantly overexpressed in human breast cancer tissues. Our data present an 11-component genetic pathway, invisible to transcriptional profiling approaches, in which the CELF1 protein functions as a central node controlling translational activation of genes driving EMT and ultimately tumour progression." - https://www.nature.com/articles/ncomms13362
+
+
+**REG3A** - “Persistent acinar to ductal metaplasia (ADM) is a recently recognized precursor of pancreatic ductal adenocarcinoma (PDAC). Here we show that the ADM area of human pancreas tissue adjacent to PDAC expresses significantly higher levels of regenerating protein 3A (REG3A) ….. Our data indicates that REG3A/REG3B promotes persistent ADM through binding to EXTL3 and activating the RAS-RAF-MEK-ERK signaling pathway. Targeting REG3A/REG3B, its receptor EXTL3, or other downstream molecules could interrupt the ADM process and prevent early PDAC carcinogenesis” - https://www.nature.com/articles/s42003-021-02193-z
+
+**PRSS1** and other pancreatitis-associated gene mutations are not directly important in the development of pancreatic cancer, but rather lead to a high-risk inflammatory milieu for the accumulation of oncogenic mutations. The risk is potentiated by known cofactors such as tobacco smoking and, likely, by genetic factors that are yet to be identified. - https://www.frontiersin.org/articles/10.3389/fphys.2014.00070/full#:~:text=PRSS1%20and%20other%20pancreatitis%2Dassociated,the%20accumulation%20of%20oncogenic%20mutations.
+
+
+
+
+PFN1 - "Tumor cells exhibit abnormal actin remodeling profiles, which involve the altered expressions of several important actin-binding proteins. Profilin1 (Pfn1), originally identified as an actin-associated protein, has been linked to several human malignancies. Our recent studies suggested that Pfn1 facilitates apoptosis in pancreatic cancer cells. Here, we investigated the exact role of Profilin1 (Pfn1) in pancreatic adenocarcinoma (PDAC) and the underlying mechanisms."
+https://molecular-cancer.biomedcentral.com/articles/10.1186/1476-4598-13-187
+
+EEF1D - "High expression levels of EEF1A2 and EEF1G predicted poor survivability of patients in the high-risk group, whereas lower expression of EEF1B2, EEF1E1 and EEF2 predicted better survival. Higher EEF1D levels in the high-risk group did not correlate with any difference in survivability between the risk groups (S4 Fig)."
+
