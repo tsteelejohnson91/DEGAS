@@ -2,7 +2,7 @@
 ### https://doi.org/10.1186/s13073-022-01012-2
 ### Package development by: <br>Zhi Huang (https://github.com/huangzhii)<br>Travis S. Johnson (https://github.com/tsteelejohnson91)
 
-![license](figures/CC_BY-NC-SA.png)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ![DEGAS](figures/DEGAS.png "DEGAS")
 
