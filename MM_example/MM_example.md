@@ -12,7 +12,7 @@
     ## Warning: package 'ggplot2' was built under R version 4.0.2
 
     # Set working directory to the downloaded directory
-    setwd("~/Desktop/DEGAS/MM_example_testing/")
+    setwd("~/Desktop/DEGAS/MM_example/")
 
 # Load data
 
