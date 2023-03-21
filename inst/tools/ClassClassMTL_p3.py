@@ -23,6 +23,14 @@ np.random.shuffle(train_pat)				# CHANGED 20201217
 np.random.shuffle(train_sc)					# CHANGED 20201217
 train_sc2 = train_sc[0:scbatch_sz]			# CHANGED
 train_pat2 = train_pat[0:patbatch_sz]		# CHANGED
+while np.sum(np.sum(np.squeeze(Ypat[train_pat2,:])>0,axis=0)<2) > 0 or np.sum(np.sum(np.squeeze(Ysc[train_sc2,:])>0,axis=0)<2) > 0:
+	train_sc = resample(50,Ysc,idx_sc)			# CHANGED
+	train_pat = resample(50,Ypat,idx_pat)		# CHANGED
+	np.random.shuffle(train_pat)				# CHANGED 20201217
+	np.random.shuffle(train_sc)					# CHANGED 20201217
+	train_sc2 = train_sc[0:scbatch_sz]			# CHANGED
+	train_pat2 = train_pat[0:patbatch_sz]		# CHANGED
+	np.squeeze(Ypat[train_pat2,:])
 resampleGammaXYpat = resample_mixGamma(np.squeeze(Xpat[train_pat2,:]),np.squeeze(Ypat[train_pat2,:]),list(range(patbatch_sz)),patbatch_sz,Lpat)       # CHANGED 20201217
 resampleGammaXYsc = resample_mixGamma(np.squeeze(Xsc[train_sc2,:]),np.squeeze(Ysc[train_sc2,:]),list(range(scbatch_sz)),scbatch_sz,Lsc)       # CHANGED 20201217
 tensor_train = {xs: np.concatenate([resampleGammaXYsc[0],resampleGammaXYpat[0]]), ys_sc: resampleGammaXYsc[1], ys_pat: resampleGammaXYpat[1], lsc: resampleGammaXYsc[1].shape[0], lpat: resampleGammaXYpat[1].shape[0], kprob: do_prc}
@@ -45,6 +53,14 @@ for i in range(train_steps+1):
 		np.random.shuffle(train_pat)				# CHANGED
 		train_sc2 = train_sc[0:scbatch_sz]			# CHANGED
 		train_pat2 = train_pat[0:patbatch_sz]		# CHANGED
+		while np.sum(np.sum(np.squeeze(Ypat[train_pat2,:])>0,axis=0)<2) > 0 or np.sum(np.sum(np.squeeze(Ysc[train_sc2,:])>0,axis=0)<2) > 0:
+			train_sc = resample(50,Ysc,idx_sc)			# CHANGED
+			train_pat = resample(50,Ypat,idx_pat)		# CHANGED
+			np.random.shuffle(train_pat)				# CHANGED 20201217
+			np.random.shuffle(train_sc)					# CHANGED 20201217
+			train_sc2 = train_sc[0:scbatch_sz]			# CHANGED
+			train_pat2 = train_pat[0:patbatch_sz]		# CHANGED
+			np.squeeze(Ypat[train_pat2,:])
 		resampleGammaXYpat = resample_mixGamma(np.squeeze(Xpat[train_pat2,:]),np.squeeze(Ypat[train_pat2,:]),list(range(patbatch_sz)),patbatch_sz,Lpat)       # CHANGED 20201217
 		resampleGammaXYsc = resample_mixGamma(np.squeeze(Xsc[train_sc2,:]),np.squeeze(Ysc[train_sc2,:]),list(range(scbatch_sz)),scbatch_sz,Lsc)       # CHANGED 20201217
 		tensor_train = {xs: np.concatenate([resampleGammaXYsc[0],resampleGammaXYpat[0]]), ys_sc: resampleGammaXYsc[1], ys_pat: resampleGammaXYpat[1], lsc: resampleGammaXYsc[1].shape[0], lpat: resampleGammaXYpat[1].shape[0], kprob: do_prc}
