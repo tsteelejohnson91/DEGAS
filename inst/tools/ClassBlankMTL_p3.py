@@ -24,6 +24,10 @@ np.random.shuffle(train_sc)
 train_sc2 = train_sc[0:scbatch_sz]			# CHANGED
 #train_pat2 = train_pat[0:patbatch_sz]		# CHANGED
 train_pat2 = idx_pat[0:patbatch_sz]
+while np.sum(np.sum(np.squeeze(Ypat[train_pat2,:])>0,axis=0)<2) > 0:
+	train_pat = resample(50,Ypat,idx_pat)		# CHANGED
+	np.random.shuffle(train_pat)				# CHANGED 20201217
+	train_pat2 = train_pat[0:patbatch_sz]		# CHANGED
 resampleGammaXYsc = resample_mixGamma(np.squeeze(Xsc[train_sc2,:]),np.squeeze(Ysc[train_sc2,:]),list(range(scbatch_sz)),scbatch_sz,Lsc)       # CHANGED 20201217
 #tensor_train = {xs: np.concatenate([np.squeeze(Xsc[train_sc2,]),np.squeeze(Xpat[train_pat2,:])]), ys_sc: np.squeeze(Ysc[train_sc2,:]), ys_pat: np.squeeze(Ypat[train_pat2,:]), lsc: len(train_sc2), lpat: len(train_pat2), kprob: do_prc}
 tensor_train = {xs: np.concatenate([resampleGammaXYsc[0],np.squeeze(Xpat[train_pat2,])]), ys_sc: resampleGammaXYsc[1], lsc: resampleGammaXYsc[1].shape[0], lpat: len(train_pat2), kprob: do_prc}		# CHANGED 20201217
@@ -46,6 +50,10 @@ for i in range(train_steps+1):
 		np.random.shuffle(idx_pat)					# CHANGED
 		train_sc2 = train_sc[0:scbatch_sz]			# CHANGED
 		train_pat2 = idx_pat[0:patbatch_sz]			# CHANGED
+		while np.sum(np.sum(np.squeeze(Ypat[train_pat2,:])>0,axis=0)<2) > 0:
+			train_pat = resample(50,Ypat,idx_pat)		# CHANGED
+			np.random.shuffle(train_pat)				# CHANGED 20201217
+			train_pat2 = train_pat[0:patbatch_sz]		# CHANGED
 		resampleGammaXYsc = resample_mixGamma(np.squeeze(Xsc[train_sc2,:]),np.squeeze(Ysc[train_sc2,:]),list(range(scbatch_sz)),scbatch_sz,Lsc)       # CHANGED 20201217
 		#tensor_train = {xs: np.concatenate([np.squeeze(Xsc[train_sc2,]),np.squeeze(Xpat[train_pat2,:])]), ys_sc: np.squeeze(Ysc[train_sc2,:]), ys_pat: np.squeeze(Ypat[train_pat2,:]), lsc: len(train_sc2), lpat: len(train_pat2), kprob: do_prc} #testing
 		tensor_train = {xs: np.concatenate([resampleGammaXYsc[0],np.squeeze(Xpat[train_pat2,])]), ys_sc: resampleGammaXYsc[1], lsc: resampleGammaXYsc[1].shape[0], lpat: len(train_pat2), kprob: do_prc}		# CHANGED 20201217
