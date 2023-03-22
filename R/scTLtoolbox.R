@@ -659,3 +659,69 @@ toCorrCoeff <- function(probs){
   l=2
   return(2*((probs-1/k)/(l-l/k) + 1/l)-1)
 }
+
+#***************************************************************
+# Functions for atlas level datasets and additional bootstrapping statistics             
+
+# Running DEGAS for large, atlas level, datasets
+runDEGASatlas <- function(scDat,scLab,patDat,patLab,tmpDir,model_type,architecture,FFdepth,Bagdepth,Nsubsample,seed){
+  folds = splitKfoldCV(dim(scDat)[1],floor(dim(scDat)[1]/Nsubsample))
+  ccModel_out = list()
+  for (f in folds){
+    initDEGAS()
+    set_seed_term(seed)
+    ccModel_tmp = runCCMTLBag(scDat[f,],scLab[f,],patDat,patLab,tmpDir,model_type,architecture,FFdepth,Bagdepth)
+    ccModel_out = c(ccModel_out,ccModel_tmp)
+  }
+  return(ccModel_out)
+}
+
+# Predict quantiles and statistics for Impressions
+getCI <- function(x){
+  tmp = c(mean(x),quantile(x,c(0.05,0.25,0.5,0.75,0.95)))
+  names(tmp) = c("Mean","Prc5","Prc25","Prc50","Prc75","Prc95")
+  tmp["IQR"] = tmp["Prc75"] - tmp["Prc25"]
+  tmp["CI95diff"] = tmp["Prc95"] - tmp["Prc5"]
+  return(tmp)
+}
+
+predClassBagCI <- function(ccModel,Exp,scORpat){
+  out = list()
+  for(i in 1:length(ccModel)){
+    out[[i]] <- predClass(ccModel[[i]],Exp,scORpat)
+  }
+  n_reps = length(out)
+  n_labs = dim(out[[1]])[2]
+  n_cells = dim(out[[1]])[1]
+  out = do.call(cbind,out)
+  tmp = list()
+  for(i in 1:n_labs){
+    message(i)
+    tmp[[i]] = t(apply(out[,seq(i,dim(out)[2],n_labs)], 1, function(x) getCI(x)))
+    colnames(tmp[[i]]) = paste0(colnames(tmp[[1]]),"_",as.character(i))
+  }
+  out = do.call(cbind,tmp)
+  return(out)
+}
+             
+#  knnSmoothing for large, atlas level, datasets
+knnSmoothAtlas <- function(sc_seurat,preds,k){
+  folds = splitKfoldCV(dim(sc_seurat)[2],floor(dim(sc_seurat)[2]/5000))
+  cor_list = list()
+  i=0
+  for (f in folds){
+    i=i+1
+    samp = f
+    umap_coords = sc_seurat@reductions$umap@cell.embeddings[samp,]
+    predsSmoothed = knnSmooth(as.matrix(preds[samp,]),as.matrix(umap_coords),k)
+    RespCor = toCorrCoeff(scaleFunc(predsSmoothed))
+    df = data.frame(Idx = f, UMAP_1 = umap_coords[,1], UMAP_2 = umap_coords[,2],
+                    RespCor = RespCor, Cluster = sc_seurat$seurat_clusters[samp])
+    cor_list[[i]] = df
+  }
+  cor_list_df = do.call(rbind,cor_list)
+  return(cor_list_df[rownames(preds),])
+}
+             
+              
+              
