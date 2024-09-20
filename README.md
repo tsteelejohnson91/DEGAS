@@ -1,7 +1,3 @@
-output:
-  html_document:
-    includes: 
-      in_header: GA_script.html
 # Diagnostic Evidence GAuge of Single cells (DEGAS): A flexible deep transfer learning framework for prioritizing cells in relation to disease
 ### https://doi.org/10.1186/s13073-022-01012-2
 ### Package development by: <br>Zhi Huang (https://github.com/huangzhii)<br>Travis S. Johnson (https://github.com/tsteelejohnson91)
