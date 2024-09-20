@@ -81,14 +81,8 @@ install.packages("ggplot2")
 Diagnostic Evidence GAuge of Spatial transcriptomics (DEGAS)
 
 ### Usage tracking
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-G8KBCK5XT5"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-G8KBCK5XT5');
-</script>
+Please click this link to help us track our usage.
+https://tsteelejohnson91.github.io/DEGAS/
 
 
 
