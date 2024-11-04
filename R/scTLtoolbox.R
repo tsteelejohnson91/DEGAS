@@ -617,7 +617,7 @@ pairDist <- function(locs){
 knnSmooth <- function(probs,locs,k=5){
   out = probs
   dists = pairDist(locs)
-  if(class(probs)=="numeric"){
+  if(class(probs)[1]=="numeric"){
     N = length(probs)
     for(i in 1:N){
       idx = order(dists[i,])
