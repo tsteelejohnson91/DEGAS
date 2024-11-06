@@ -705,8 +705,8 @@ predClassBagCI <- function(ccModel,Exp,scORpat){
 }
              
 #  knnSmoothing for large, atlas level, datasets
-knnSmoothAtlas <- function(sc_seurat,preds,k){
-  folds = splitKfoldCV(dim(sc_seurat)[2],floor(dim(sc_seurat)[2]/5000))
+knnSmoothAtlas <- function(sc_seurat,preds,k,n_split){
+  folds = splitKfoldCV(dim(sc_seurat)[2],floor(dim(sc_seurat)[2]/n_split))
   cor_list = list()
   i=0
   for (f in folds){
